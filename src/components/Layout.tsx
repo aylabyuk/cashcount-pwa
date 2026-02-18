@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAppSelector } from '../store'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import appIcon from '../assets/icon.png'
 
 export default function Layout() {
   const theme = useAppSelector((s) => s.settings.theme)
@@ -62,7 +63,10 @@ export default function Layout() {
               </button>
             )}
             {showTitle && (
-              <h1 className="text-lg font-semibold">CashCount</h1>
+              <div className="flex items-center gap-1.5">
+                <img src={appIcon} alt="" className="w-7 h-7" />
+                <h1 className="text-lg font-semibold">CashCount</h1>
+              </div>
             )}
           </div>
           {showGear && (

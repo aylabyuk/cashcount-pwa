@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSpring, animated } from '@react-spring/web'
 import { SPRING_MODAL } from '../../utils/constants'
+import { useSwipe } from '../../hooks/useSwipeX'
 import ThemeSelector from './ThemeSelector'
 import InstallAppSection from './InstallAppSection'
 import AboutSection from './AboutSection'
@@ -22,8 +23,17 @@ export default function SettingsPanel() {
     config: SPRING_MODAL,
   })
 
+  const swipe = useSwipe({
+    onSwipeUp: () => setCollapsed(true),
+    onSwipeDown: () => setCollapsed(false),
+  })
+
   return (
-    <div className="border-t border-gray-200 dark:border-gray-700 shrink-0">
+    <div
+      className="border-t border-gray-200 dark:border-gray-700 shrink-0"
+      onTouchStart={swipe.onTouchStart}
+      onTouchEnd={swipe.onTouchEnd}
+    >
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2"

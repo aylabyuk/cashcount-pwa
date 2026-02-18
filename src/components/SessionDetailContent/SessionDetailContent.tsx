@@ -33,7 +33,7 @@ export default function SessionDetailContent({
   }
 
   return (
-    <div className={isPanel ? 'h-full overflow-y-auto' : ''}>
+    <div className={isPanel ? 'h-full overflow-y-auto no-scrollbar' : ''}>
       <div className={`${isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'} ${status === 'no_donations' ? `flex flex-col ${isPanel ? 'h-full' : 'min-h-[calc(100vh-3.5rem)]'}` : ''}`}>
         <SessionDetailHeader
           date={formatDate(session.date)}
@@ -91,7 +91,7 @@ export default function SessionDetailContent({
             />
           </>
         )}
-        <div className="h-40" />
+        {!isPanel && <div className="h-40" />}
       </div>
 
       {/* Bottom action bar (mobile) */}

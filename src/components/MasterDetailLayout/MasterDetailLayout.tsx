@@ -3,6 +3,7 @@ import { useSpring, animated } from '@react-spring/web'
 import { useAppSelector, useAppDispatch } from '../../store'
 import { navigateToDetail, navigateToList } from '../../store/viewSlice'
 import { SPRING_MODAL } from '../../utils/constants'
+import { useSwipeX } from '../../hooks/useSwipeX'
 import SessionsListContent from '../SessionsListContent'
 import SessionDetailContent from '../SessionDetailContent'
 import SettingsPanel from '../SettingsPanel'
@@ -20,6 +21,9 @@ export default function MasterDetailLayout() {
     config: SPRING_MODAL,
   })
 
+  const panelSwipe = useSwipeX({ onSwipeLeft: () => setCollapsed(true) })
+  const detailSwipe = useSwipeX({ onSwipeRight: () => setCollapsed(false) })
+
   return (
     <div className="relative h-full">
       {/* Master panel - overlays detail */}
@@ -27,7 +31,12 @@ export default function MasterDetailLayout() {
         style={{ width: springStyles.width, opacity: springStyles.opacity, overflow: 'hidden' }}
         className="absolute left-0 top-0 bottom-0 z-10 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col"
       >
-        <div className="flex flex-col h-full" style={{ width: PANEL_WIDTH }}>
+        <div
+          className="flex flex-col h-full"
+          style={{ width: PANEL_WIDTH }}
+          onTouchStart={panelSwipe.onTouchStart}
+          onTouchEnd={panelSwipe.onTouchEnd}
+        >
           <SessionsListContent
             onSelectSession={(id) => dispatch(navigateToDetail(id))}
             onSessionDeleted={() => dispatch(navigateToList())}
@@ -55,7 +64,11 @@ export default function MasterDetailLayout() {
       </animated.button>
 
       {/* Detail panel - always full width */}
-      <div className="h-full flex flex-col overflow-hidden">
+      <div
+        className="h-full flex flex-col overflow-hidden"
+        onTouchStart={detailSwipe.onTouchStart}
+        onTouchEnd={detailSwipe.onTouchEnd}
+      >
         {selectedSessionId ? (
           <div className="flex-1 overflow-hidden w-full max-w-3xl mx-auto">
             <SessionDetailContent

@@ -341,6 +341,20 @@ export default function SessionDetailContent({
                 </animated.div>
               )
             })}
+            {editable && (
+              <div style={{ width: '20%' }}>
+                <div className="p-1">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="w-full min-h-[125.5px] rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 flex items-center justify-center"
+                  >
+                    <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div>

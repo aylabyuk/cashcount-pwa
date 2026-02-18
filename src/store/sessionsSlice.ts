@@ -167,6 +167,9 @@ const sessionsSlice = createSlice({
       const cutoffStr = cutoff.toISOString().slice(0, 10)
       state.sessions = state.sessions.filter((s) => s.date >= cutoffStr)
     },
+    setSessions(state, action: PayloadAction<CountingSession[]>) {
+      state.sessions = action.payload
+    },
   },
 })
 
@@ -181,6 +184,7 @@ export const {
   markNoDonations,
   reactivateSession,
   purgeOldSessions,
+  setSessions,
 } = sessionsSlice.actions
 
 export default sessionsSlice.reducer

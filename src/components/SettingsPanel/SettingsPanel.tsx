@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSpring, animated } from '@react-spring/web'
 import { SPRING_MODAL } from '../../utils/constants'
 import { useSwipe } from '../../hooks/useSwipeX'
+import UserSection from './UserSection'
 import ThemeSelector from './ThemeSelector'
 import InstallAppSection from './InstallAppSection'
 import AboutSection from './AboutSection'
@@ -50,6 +51,7 @@ export default function SettingsPanel() {
       </button>
       <animated.div style={{ ...springStyles, overflow: 'hidden' }}>
         <div ref={contentRef} className="px-4 pb-4 space-y-4">
+          <UserSection />
           <ThemeSelector />
           <InstallAppSection />
           <AboutSection />

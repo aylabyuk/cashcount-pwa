@@ -1,31 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
-import sessionsReducer, { type CountingSession } from './sessionsSlice'
+import sessionsReducer from './sessionsSlice'
 import settingsReducer from './settingsSlice'
 import viewReducer from './viewSlice'
+import authReducer from './authSlice'
+import { firestoreMiddleware } from './firestoreMiddleware'
 
-const STORAGE_KEY = 'cashcount_sessions'
 const SETTINGS_KEY = 'cashcount_settings'
-
-function loadSessions() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    if (!data) return undefined
-    return migrateSessions(JSON.parse(data))
-  } catch {
-    return undefined
-  }
-}
-
-function migrateSessions(data: { sessions: Record<string, unknown>[] }): { sessions: CountingSession[] } {
-  return {
-    ...data,
-    sessions: data.sessions.map((s) => ({
-      ...s,
-      status: s.status ?? 'active',
-    })) as CountingSession[],
-  }
-}
 
 function loadSettings() {
   try {
@@ -41,17 +22,23 @@ export const store = configureStore({
     sessions: sessionsReducer,
     settings: settingsReducer,
     view: viewReducer,
+    auth: authReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['sessions/setSessions'],
+      },
+    }).concat(firestoreMiddleware),
   preloadedState: {
-    sessions: loadSessions() ?? { sessions: [] },
+    sessions: { sessions: [] },
     settings: loadSettings() ?? { theme: 'system' as const },
   },
 })
 
-// Persist to localStorage on every state change
+// Persist settings to localStorage (sessions now come from Firestore)
 store.subscribe(() => {
   const state = store.getState()
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sessions))
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings))
 })
 

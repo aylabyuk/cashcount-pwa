@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '../store'
 import { purgeOldSessions } from '../store/sessionsSlice'
 import { PURGE_MONTHS } from '../utils/constants'
@@ -8,8 +8,13 @@ export function usePurgeOldSessions() {
   const dispatch = useAppDispatch()
   const [toastMessage, setToastMessage] = useState('')
   const handleToastClose = useCallback(() => setToastMessage(''), [])
+  const purgedRef = useRef(false)
 
   useEffect(() => {
+    // Wait for Firestore data to load before purging
+    if (sessions.length === 0 || purgedRef.current) return
+    purgedRef.current = true
+
     const cutoff = new Date()
     cutoff.setMonth(cutoff.getMonth() - PURGE_MONTHS)
     const cutoffStr = cutoff.toISOString().slice(0, 10)
@@ -20,8 +25,7 @@ export function usePurgeOldSessions() {
         `${oldCount} session${oldCount > 1 ? 's' : ''} older than ${PURGE_MONTHS} months removed`
       )
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [sessions, dispatch])
 
   return { toastMessage, handleToastClose }
 }

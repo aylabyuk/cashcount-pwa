@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppSelector, useAppDispatch } from '../store'
-import { addEnvelope, deleteEnvelope, getEnvelopeTotal } from '../store/sessionsSlice'
+import { addEnvelope, deleteEnvelope, getEnvelopeTotal, getEnvelopeCashTotal } from '../store/sessionsSlice'
 import { formatDate, isSessionLocked } from '../utils/date'
 import { formatCurrency } from '../utils/currency'
 import TotalsSummary from './TotalsSummary'
@@ -116,36 +116,95 @@ export default function SessionDetailContent({
           <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
             No envelopes yet.
           </div>
-        ) : (
-          <div className="space-y-1">
-            {sortedEnvelopes.map((envelope) => (
-              <div
-                key={envelope.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
-              >
-                <button
-                  onClick={() => onSelectEnvelope(envelope.id)}
-                  className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
+        ) : isPanel ? (
+          <div className="flex flex-wrap gap-2">
+            {sortedEnvelopes.map((envelope) => {
+              const cashTotal = getEnvelopeCashTotal(envelope)
+              return (
+                <div
+                  key={envelope.id}
+                  className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group w-36"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Envelope #{envelope.number}</span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                  <button
+                    onClick={() => onSelectEnvelope(envelope.id)}
+                    className="w-full text-left p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">#{envelope.number}</span>
+                      {!locked && (
+                        <div className="w-5" />
+                      )}
+                    </div>
+                    <span className="text-sm font-bold font-mono text-center block mt-1 mb-2">
                       {formatCurrency(getEnvelopeTotal(envelope))}
                     </span>
-                  </div>
-                </button>
-                {!locked && (
-                  <button
-                    onClick={() => handleDeleteClick(envelope)}
-                    className="px-3 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 border-l border-gray-200 dark:border-gray-700"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <div className="space-y-0.5 text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                      <div className="flex justify-between">
+                        <span>Cash</span>
+                        <span>{formatCurrency(cashTotal)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Coins</span>
+                        <span>{formatCurrency(envelope.coinsAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Cheque</span>
+                        <span>{formatCurrency(envelope.chequeAmount)}</span>
+                      </div>
+                    </div>
                   </button>
-                )}
-              </div>
-            ))}
+                  {!locked && (
+                    <button
+                      onClick={() => handleDeleteClick(envelope)}
+                      className="absolute top-1.5 right-1.5 p-1 rounded text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {sortedEnvelopes.map((envelope) => {
+              const cashTotal = getEnvelopeCashTotal(envelope)
+              return (
+                <div
+                  key={envelope.id}
+                  className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
+                >
+                  <button
+                    onClick={() => onSelectEnvelope(envelope.id)}
+                    className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium">Envelope #{envelope.number}</span>
+                      <span className="text-sm font-bold font-mono">
+                        {formatCurrency(getEnvelopeTotal(envelope))}
+                      </span>
+                    </div>
+                    <div className="flex gap-3 text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                      <span>Cash {formatCurrency(cashTotal)}</span>
+                      <span>Coins {formatCurrency(envelope.coinsAmount)}</span>
+                      <span>Cheque {formatCurrency(envelope.chequeAmount)}</span>
+                    </div>
+                  </button>
+                  {!locked && (
+                    <button
+                      onClick={() => handleDeleteClick(envelope)}
+                      className="px-3 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 border-l border-gray-200 dark:border-gray-700"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
         <div className="h-40" />

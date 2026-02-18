@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTransition, animated } from '@react-spring/web'
-import { useModalKeys } from '../hooks/useModalKeys'
-import { SPRING_MODAL } from '../utils/constants'
+import { useModalKeys } from '../../hooks/useModalKeys'
+import { SPRING_MODAL } from '../../utils/constants'
 
 interface ReportPrintedProps {
   type: 'report_printed'

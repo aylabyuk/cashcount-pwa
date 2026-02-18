@@ -1,4 +1,4 @@
-import { formatCurrency } from '../utils/currency'
+import { formatCurrency } from '../../utils/currency'
 
 interface Props {
   denomination: number

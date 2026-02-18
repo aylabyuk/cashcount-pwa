@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { centsToDecimalString, parseCents } from '../utils/currency'
+import { centsToDecimalString, parseCents } from '../../utils/currency'
+import { CURRENCY_REGEX } from '../../utils/constants'
 
 interface Props {
   label: string
@@ -21,7 +22,7 @@ export default function CurrencyField({ label, cents, onChange, disabled }: Prop
 
   function handleChange(value: string) {
     // Allow only digits and one decimal point
-    if (value !== '' && !/^\d*\.?\d{0,2}$/.test(value)) return
+    if (value !== '' && !CURRENCY_REGEX.test(value)) return
     setText(value)
     onChange(parseCents(value))
   }

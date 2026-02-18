@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Outlet, useLocation, useNavigate, matchPath } from 'react-router-dom'
 import { useSpring, animated } from '@react-spring/web'
-import { useMediaQuery } from '../hooks/useMediaQuery'
-import { SPRING_MODAL, DESKTOP_BREAKPOINT } from '../utils/constants'
-import SessionsListContent from './SessionsListContent'
-import SessionDetailContent from './SessionDetailContent'
-import SettingsPanel from './SettingsPanel'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { SPRING_MODAL, DESKTOP_BREAKPOINT } from '../../utils/constants'
+import SessionsListContent from '../SessionsListContent'
+import SessionDetailContent from '../SessionDetailContent'
+import SettingsPanel from '../SettingsPanel'
 
 const PANEL_WIDTH = 360
 

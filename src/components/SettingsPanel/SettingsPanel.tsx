@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSpring, animated } from '@react-spring/web'
-import { useAppSelector, useAppDispatch } from '../store'
-import { setTheme, type Theme } from '../store/settingsSlice'
-import { SPRING_MODAL } from '../utils/constants'
+import { useAppSelector, useAppDispatch } from '../../store'
+import { setTheme, type Theme } from '../../store/settingsSlice'
+import { SPRING_MODAL } from '../../utils/constants'
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'system', label: 'System' },

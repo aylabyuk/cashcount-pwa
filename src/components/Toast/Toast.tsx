@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useTransition, animated } from '@react-spring/web'
-import { SPRING_SNAPPY } from '../utils/constants'
+import { SPRING_SNAPPY } from '../../utils/constants'
 
 interface Props {
   open: boolean

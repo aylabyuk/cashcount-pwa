@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { useAppSelector, useAppDispatch } from '../store'
-import { purgeOldSessions } from '../store/sessionsSlice'
-import { useMediaQuery } from '../hooks/useMediaQuery'
-import { DESKTOP_BREAKPOINT, PURGE_MONTHS } from '../utils/constants'
-import Toast from './Toast'
-import appIcon from '../assets/icon.png'
+import { useAppSelector, useAppDispatch } from '../../store'
+import { purgeOldSessions } from '../../store/sessionsSlice'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
+import { DESKTOP_BREAKPOINT, PURGE_MONTHS } from '../../utils/constants'
+import Toast from '../Toast'
+import appIcon from '../../assets/icon.png'
 
 export default function Layout() {
   const theme = useAppSelector((s) => s.settings.theme)

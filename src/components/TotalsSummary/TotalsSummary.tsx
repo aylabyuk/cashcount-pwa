@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { type CountingSession, getSessionTotals } from '../store/sessionsSlice'
-import { formatCurrency } from '../utils/currency'
-import { BILL_DENOMINATIONS } from '../utils/constants'
+import { type CountingSession, getSessionTotals } from '../../store/sessionsSlice'
+import { formatCurrency } from '../../utils/currency'
+import { BILL_DENOMINATIONS } from '../../utils/constants'
 
 interface Props {
   session: CountingSession

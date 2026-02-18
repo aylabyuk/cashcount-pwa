@@ -16,5 +16,8 @@ export const MODAL_TRANSITION = {
 // Layout breakpoints (media query strings)
 export const DESKTOP_BREAKPOINT = '(min-width: 768px)'
 
+// Input validation
+export const CURRENCY_REGEX = /^\d*\.?\d{0,2}$/
+
 // Data retention
 export const PURGE_MONTHS = 6

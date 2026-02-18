@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useAppSelector, useAppDispatch } from '../store'
-import { addSession, deleteSession, getSessionTotals } from '../store/sessionsSlice'
-import { formatDate, getCurrentSunday } from '../utils/date'
-import { formatCurrency } from '../utils/currency'
-import ConfirmDialog from './ConfirmDialog'
-import AlertDialog from './AlertDialog'
+import { useAppSelector, useAppDispatch } from '../../store'
+import { addSession, deleteSession, getSessionTotals } from '../../store/sessionsSlice'
+import { formatDate, getCurrentSunday } from '../../utils/date'
+import { formatCurrency } from '../../utils/currency'
+import ConfirmDialog from '../ConfirmDialog'
+import AlertDialog from '../AlertDialog'
 
 interface Props {
   onSelectSession: (id: string) => void

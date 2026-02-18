@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTransition, animated } from '@react-spring/web'
-import { SPRING_SNAPPY } from '../utils/constants'
-import { useAppSelector, useAppDispatch } from '../store'
+import { SPRING_SNAPPY } from '../../utils/constants'
+import { useAppSelector, useAppDispatch } from '../../store'
 import {
   addEnvelope,
   deleteEnvelope,
@@ -11,13 +11,13 @@ import {
   reactivateSession,
   getEnvelopeTotal,
   getEnvelopeCashTotal,
-} from '../store/sessionsSlice'
-import { formatDate, getCurrentSunday } from '../utils/date'
-import { formatCurrency } from '../utils/currency'
-import TotalsSummary from './TotalsSummary'
-import EnvelopeModal from './EnvelopeModal'
-import ConfirmDialog from './ConfirmDialog'
-import StatusConfirmModal from './StatusConfirmModal'
+} from '../../store/sessionsSlice'
+import { formatDate, getCurrentSunday } from '../../utils/date'
+import { formatCurrency } from '../../utils/currency'
+import TotalsSummary from '../TotalsSummary'
+import EnvelopeModal from '../EnvelopeModal'
+import ConfirmDialog from '../ConfirmDialog'
+import StatusConfirmModal from '../StatusConfirmModal'
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   report_printed: {

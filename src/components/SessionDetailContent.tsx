@@ -240,9 +240,10 @@ export default function SessionDetailContent({
         )}
 
         {/* Report printed info */}
-        {status === 'report_printed' && session.reportPrintedAt && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
-            Report printed {new Date(session.reportPrintedAt).toLocaleString()}
+        {(status === 'report_printed' || status === 'deposited') && session.reportPrintedAt && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 space-y-0.5">
+            <div className="font-medium">Report printed</div>
+            <div>{new Date(session.reportPrintedAt).toLocaleString()}</div>
           </div>
         )}
 

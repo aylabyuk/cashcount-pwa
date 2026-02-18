@@ -85,6 +85,17 @@ export default function EnvelopeModal(props: Props) {
 
   const disabled = mode === 'edit' && !!props.disabled
 
+  // Check if edit mode has unsaved changes
+  const hasChanges = mode === 'edit' && (
+    count100 !== props.envelope.count100 ||
+    count50 !== props.envelope.count50 ||
+    count20 !== props.envelope.count20 ||
+    count10 !== props.envelope.count10 ||
+    count5 !== props.envelope.count5 ||
+    coinsAmount !== props.envelope.coinsAmount ||
+    chequeAmount !== props.envelope.chequeAmount
+  )
+
   function resetFields() {
     setCount100(0)
     setCount50(0)
@@ -100,6 +111,10 @@ export default function EnvelopeModal(props: Props) {
       setShowDiscardConfirm(true)
       return
     }
+    if (mode === 'edit' && hasChanges) {
+      setShowDiscardConfirm(true)
+      return
+    }
     if (mode === 'add') resetFields()
     setAdding(false)
     onClose()
@@ -107,7 +122,7 @@ export default function EnvelopeModal(props: Props) {
 
   function handleConfirmDiscard() {
     setShowDiscardConfirm(false)
-    resetFields()
+    if (mode === 'add') resetFields()
     setAdding(false)
     onClose()
   }
@@ -120,32 +135,25 @@ export default function EnvelopeModal(props: Props) {
     setAdding(false)
   }
 
-  function dispatchUpdate(changes: Record<string, number>) {
+  function handleSave() {
     if (mode !== 'edit') return
-    dispatch(updateEnvelope({ sessionId: props.sessionId, envelopeId: props.envelope.id, changes }))
+    dispatch(updateEnvelope({
+      sessionId: props.sessionId,
+      envelopeId: props.envelope.id,
+      changes: { count100, count50, count20, count10, count5, coinsAmount, chequeAmount },
+    }))
+    onClose()
   }
-
-  // Wrap setters to also dispatch in edit mode
-  function setField(setter: (v: number) => void, field: string) {
-    return (value: number) => {
-      setter(value)
-      if (mode === 'edit') dispatchUpdate({ [field]: value })
-    }
-  }
-
-  const onCount100 = setField(setCount100, 'count100')
-  const onCount50 = setField(setCount50, 'count50')
-  const onCount20 = setField(setCount20, 'count20')
-  const onCount10 = setField(setCount10, 'count10')
-  const onCount5 = setField(setCount5, 'count5')
-  const onCoins = setField(setCoinsAmount, 'coinsAmount')
-  const onCheque = setField(setChequeAmount, 'chequeAmount')
 
   const title = mode === 'edit' ? `Envelope #${props.displayNumber}` : 'New Envelope'
 
   useModalKeys(open, {
     onClose: handleClose,
-    onConfirm: mode === 'add' && totalCents > 0 && !adding ? handleAdd : undefined,
+    onConfirm: mode === 'add' && totalCents > 0 && !adding
+      ? handleAdd
+      : mode === 'edit' && hasChanges && !disabled
+        ? handleSave
+        : undefined,
   })
 
   const rendered = transitions((styles, show) =>
@@ -178,6 +186,14 @@ export default function EnvelopeModal(props: Props) {
               >
                 Add
               </button>
+            ) : !disabled ? (
+              <button
+                onClick={handleSave}
+                disabled={!hasChanges}
+                className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 disabled:opacity-30 disabled:pointer-events-none"
+              >
+                Save
+              </button>
             ) : (
               <div className="w-10" />
             )}
@@ -188,11 +204,11 @@ export default function EnvelopeModal(props: Props) {
             <div>
               <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Cash Bills</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg px-3">
-                <DenominationRow denomination={100} count={count100} onChange={onCount100} disabled={disabled} />
-                <DenominationRow denomination={50} count={count50} onChange={onCount50} disabled={disabled} />
-                <DenominationRow denomination={20} count={count20} onChange={onCount20} disabled={disabled} />
-                <DenominationRow denomination={10} count={count10} onChange={onCount10} disabled={disabled} />
-                <DenominationRow denomination={5} count={count5} onChange={onCount5} disabled={disabled} />
+                <DenominationRow denomination={100} count={count100} onChange={setCount100} disabled={disabled} />
+                <DenominationRow denomination={50} count={count50} onChange={setCount50} disabled={disabled} />
+                <DenominationRow denomination={20} count={count20} onChange={setCount20} disabled={disabled} />
+                <DenominationRow denomination={10} count={count10} onChange={setCount10} disabled={disabled} />
+                <DenominationRow denomination={5} count={count5} onChange={setCount5} disabled={disabled} />
               </div>
             </div>
 
@@ -200,7 +216,7 @@ export default function EnvelopeModal(props: Props) {
             <div>
               <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Coins</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg px-3">
-                <CurrencyField label="Coins" cents={coinsAmount} onChange={onCoins} disabled={disabled} />
+                <CurrencyField label="Coins" cents={coinsAmount} onChange={setCoinsAmount} disabled={disabled} />
               </div>
             </div>
 
@@ -208,7 +224,7 @@ export default function EnvelopeModal(props: Props) {
             <div>
               <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Cheques</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg px-3">
-                <CurrencyField label="Cheque" cents={chequeAmount} onChange={onCheque} disabled={disabled} />
+                <CurrencyField label="Cheque" cents={chequeAmount} onChange={setChequeAmount} disabled={disabled} />
               </div>
             </div>
 
@@ -240,13 +256,17 @@ export default function EnvelopeModal(props: Props) {
     ) : null
   )
 
+  const discardMessage = mode === 'add'
+    ? 'You have unsaved data. Are you sure you want to discard this envelope?'
+    : 'You have unsaved changes. Are you sure you want to discard them?'
+
   return (
     <>
       {rendered}
       <ConfirmDialog
         open={showDiscardConfirm}
-        title="Discard Envelope?"
-        message="You have unsaved data. Are you sure you want to discard this envelope?"
+        title={mode === 'add' ? 'Discard Envelope?' : 'Discard Changes?'}
+        message={discardMessage}
         confirmLabel="Discard"
         onConfirm={handleConfirmDiscard}
         onCancel={() => setShowDiscardConfirm(false)}

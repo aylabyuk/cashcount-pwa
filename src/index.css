@@ -8,6 +8,20 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Prevent text selection on mobile, allow on desktop */
+@media (max-width: 767px) {
+  * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
 button,
 [role="button"],
 a {

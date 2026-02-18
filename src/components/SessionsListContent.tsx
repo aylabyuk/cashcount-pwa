@@ -24,6 +24,7 @@ export default function SessionsListContent({
 
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(5)
 
   function handleAddSession() {
     const sunday = getCurrentSunday()
@@ -68,7 +69,7 @@ export default function SessionsListContent({
           </div>
         ) : (
           <div className="space-y-2">
-            {sessions.map((session) => {
+            {sessions.slice(0, visibleCount).map((session) => {
               const totals = getSessionTotals(session)
               const status = session.status
               const isSelected = session.id === selectedSessionId
@@ -113,6 +114,14 @@ export default function SessionsListContent({
                 </button>
               )
             })}
+            {visibleCount < sessions.length && (
+              <button
+                onClick={() => setVisibleCount((c) => c + 5)}
+                className="w-full py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              >
+                Load More ({sessions.length - visibleCount} remaining)
+              </button>
+            )}
           </div>
         )}
       </div>

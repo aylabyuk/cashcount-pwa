@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation, useNavigate, matchPath } from 'react-router-dom'
 import { useSpring, animated } from '@react-spring/web'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { SPRING_MODAL, DESKTOP_BREAKPOINT } from '../utils/constants'
 import SessionsListContent from './SessionsListContent'
 import SessionDetailContent from './SessionDetailContent'
 import SettingsPanel from './SettingsPanel'
@@ -9,7 +10,7 @@ import SettingsPanel from './SettingsPanel'
 const PANEL_WIDTH = 360
 
 export default function MasterDetailLayout() {
-  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const isDesktop = useMediaQuery(DESKTOP_BREAKPOINT)
   const location = useLocation()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
@@ -17,7 +18,7 @@ export default function MasterDetailLayout() {
   const springStyles = useSpring({
     width: collapsed ? 0 : PANEL_WIDTH,
     opacity: collapsed ? 0 : 1,
-    config: { tension: 300, friction: 30 },
+    config: SPRING_MODAL,
   })
 
   // Mobile: render the matched route as a full page

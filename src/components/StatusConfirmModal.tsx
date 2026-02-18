@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTransition, animated } from '@react-spring/web'
 import { useModalKeys } from '../hooks/useModalKeys'
+import { SPRING_MODAL } from '../utils/constants'
 
 interface ReportPrintedProps {
   type: 'report_printed'
@@ -39,7 +40,7 @@ export default function StatusConfirmModal(props: Props) {
     from: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },
     enter: { backdropOpacity: 1, scale: 1, dialogOpacity: 1 },
     leave: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },
-    config: { tension: 300, friction: 30 },
+    config: SPRING_MODAL,
     onDestroyed: () => {
       setBatchNumber('')
       setName1('')

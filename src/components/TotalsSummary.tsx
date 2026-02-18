@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import { type CountingSession, getSessionTotals } from '../store/sessionsSlice'
 import { formatCurrency } from '../utils/currency'
+import { BILL_DENOMINATIONS } from '../utils/constants'
 
 interface Props {
   session: CountingSession
 }
 
-const DENOMINATIONS = [100, 50, 20, 10, 5] as const
+const DENOMINATIONS = BILL_DENOMINATIONS
 
 export default function TotalsSummary({ session }: Props) {
   const totals = getSessionTotals(session)

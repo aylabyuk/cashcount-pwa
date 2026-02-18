@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTransition, animated } from '@react-spring/web'
+import { SPRING_SNAPPY } from '../utils/constants'
 import { useAppSelector, useAppDispatch } from '../store'
 import {
   addEnvelope,
@@ -110,7 +111,7 @@ export default function SessionDetailContent({
           await next({ opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' })
         },
     leave: { opacity: 0, transform: 'scale(0.9)', height: 0, marginBottom: 0, width: '0%' },
-    config: { tension: 300, friction: 24 },
+    config: SPRING_SNAPPY,
   })
 
   function handleAddEnvelope(envelope: {

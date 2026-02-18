@@ -3,10 +3,11 @@ import { useTransition, animated } from '@react-spring/web'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useModalKeys } from '../hooks/useModalKeys'
 import { useAppDispatch } from '../store'
-import { updateEnvelope, type Envelope } from '../store/sessionsSlice'
+import { updateEnvelope, getEnvelopeCashTotal, type Envelope } from '../store/sessionsSlice'
 import DenominationRow from './DenominationRow'
 import CurrencyField from './CurrencyField'
 import { formatCurrency } from '../utils/currency'
+import { SPRING_MODAL } from '../utils/constants'
 import ConfirmDialog from './ConfirmDialog'
 
 interface AddProps {
@@ -71,15 +72,12 @@ export default function EnvelopeModal(props: Props) {
     from: { backdropOpacity: 0, y: isDesktop ? 0 : 100, dialogOpacity: isDesktop ? 0 : 1, scale: isDesktop ? 0.95 : 1 },
     enter: { backdropOpacity: 1, y: 0, dialogOpacity: 1, scale: 1 },
     leave: { backdropOpacity: 0, y: isDesktop ? 0 : 100, dialogOpacity: isDesktop ? 0 : 1, scale: isDesktop ? 0.95 : 1 },
-    config: { tension: 300, friction: 30 },
+    config: SPRING_MODAL,
   })
 
-  const cashTotalCents =
-    count100 * 10000 +
-    count50 * 5000 +
-    count20 * 2000 +
-    count10 * 1000 +
-    count5 * 500
+  const cashTotalCents = getEnvelopeCashTotal({
+    count100, count50, count20, count10, count5,
+  } as Envelope)
 
   const totalCents = cashTotalCents + coinsAmount + chequeAmount
 

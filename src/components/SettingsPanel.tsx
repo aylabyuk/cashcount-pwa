@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSpring, animated } from '@react-spring/web'
 import { useAppSelector, useAppDispatch } from '../store'
 import { setTheme, type Theme } from '../store/settingsSlice'
+import { SPRING_MODAL } from '../utils/constants'
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -33,7 +34,7 @@ export default function SettingsPanel() {
   const springStyles = useSpring({
     height: collapsed ? 0 : contentHeight,
     opacity: collapsed ? 0 : 1,
-    config: { tension: 300, friction: 30 },
+    config: SPRING_MODAL,
   })
 
   useEffect(() => {

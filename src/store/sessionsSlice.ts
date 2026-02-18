@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { PURGE_MONTHS } from '../utils/constants'
 
 export interface Envelope {
   id: string
@@ -162,7 +163,7 @@ const sessionsSlice = createSlice({
     },
     purgeOldSessions(state) {
       const cutoff = new Date()
-      cutoff.setMonth(cutoff.getMonth() - 6)
+      cutoff.setMonth(cutoff.getMonth() - PURGE_MONTHS)
       const cutoffStr = cutoff.toISOString().slice(0, 10)
       state.sessions = state.sessions.filter((s) => s.date >= cutoffStr)
     },

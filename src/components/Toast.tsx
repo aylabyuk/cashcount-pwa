@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useTransition, animated } from '@react-spring/web'
+import { SPRING_SNAPPY } from '../utils/constants'
 
 interface Props {
   open: boolean
@@ -19,7 +20,7 @@ export default function Toast({ open, message, duration = 4000, onClose }: Props
     from: { opacity: 0, y: 20 },
     enter: { opacity: 1, y: 0 },
     leave: { opacity: 0, y: 20 },
-    config: { tension: 300, friction: 24 },
+    config: SPRING_SNAPPY,
   })
 
   return transitions((styles, show) =>

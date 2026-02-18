@@ -1,5 +1,6 @@
 import { useTransition, animated } from '@react-spring/web'
 import { useModalKeys } from '../hooks/useModalKeys'
+import { MODAL_TRANSITION } from '../utils/constants'
 
 interface Props {
   open: boolean
@@ -12,12 +13,7 @@ interface Props {
 export default function AlertDialog({ open, title, message, buttonLabel = 'OK', onClose }: Props) {
   useModalKeys(open, { onClose })
 
-  const transitions = useTransition(open, {
-    from: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },
-    enter: { backdropOpacity: 1, scale: 1, dialogOpacity: 1 },
-    leave: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },
-    config: { tension: 300, friction: 30 },
-  })
+  const transitions = useTransition(open, MODAL_TRANSITION)
 
   return transitions((styles, show) =>
     show ? (

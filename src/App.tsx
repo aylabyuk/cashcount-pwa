@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import MasterDetailLayout from './components/MasterDetailLayout'
 import SessionsListPage from './pages/SessionsListPage'
 import SessionDetailPage from './pages/SessionDetailPage'
 import EnvelopeFormPage from './pages/EnvelopeFormPage'
@@ -10,10 +11,12 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<SessionsListPage />} />
-          <Route path="/session/:id" element={<SessionDetailPage />} />
-          <Route path="/session/:id/envelope/:envelopeId" element={<EnvelopeFormPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route element={<MasterDetailLayout />}>
+            <Route path="/" element={<SessionsListPage />} />
+            <Route path="/session/:id" element={<SessionDetailPage />} />
+            <Route path="/session/:id/envelope/:envelopeId" element={<EnvelopeFormPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

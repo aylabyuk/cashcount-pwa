@@ -1,12 +1,20 @@
 import { useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAppSelector } from '../store'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 
 export default function Layout() {
   const theme = useAppSelector((s) => s.settings.theme)
   const navigate = useNavigate()
   const location = useLocation()
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
   const isHome = location.pathname === '/'
+
+  // On desktop, all routes show the title (list panel is visible); gear only on mobile home
+  const showTitle = isDesktop || isHome
+  const showGear = !isDesktop && isHome
+  const showBack = isDesktop ? false : !isHome
 
   useEffect(() => {
     const root = document.documentElement
@@ -35,12 +43,15 @@ export default function Layout() {
     return () => mq.removeEventListener('change', handler)
   }, [theme])
 
+  // On desktop with master-detail, use h-screen flex layout for panel heights
+  const isMasterDetail = isDesktop
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className={`${isMasterDetail ? 'h-screen' : 'min-h-screen'} flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
+      <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shrink-0">
+        <div className={`${isMasterDetail ? 'px-6' : 'max-w-2xl mx-auto px-4'} h-14 flex items-center justify-between`}>
           <div className="flex items-center gap-2">
-            {!isHome && (
+            {showBack && (
               <button
                 onClick={() => navigate(-1)}
                 className="p-1.5 -ml-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -50,11 +61,11 @@ export default function Layout() {
                 </svg>
               </button>
             )}
-            {isHome && (
+            {showTitle && (
               <h1 className="text-lg font-semibold">CashCount</h1>
             )}
           </div>
-          {isHome && (
+          {showGear && (
             <button
               onClick={() => navigate('/settings')}
               className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -67,7 +78,7 @@ export default function Layout() {
           )}
         </div>
       </header>
-      <main className="max-w-2xl mx-auto">
+      <main className={isMasterDetail ? 'flex-1 overflow-hidden' : 'max-w-2xl mx-auto w-full'}>
         <Outlet />
       </main>
     </div>

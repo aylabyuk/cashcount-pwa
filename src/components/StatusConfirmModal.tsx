@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTransition, animated } from '@react-spring/web'
+import { useModalKeys } from '../hooks/useModalKeys'
 
 interface ReportPrintedProps {
   type: 'report_printed'
@@ -30,6 +31,8 @@ export default function StatusConfirmModal(props: Props) {
   const [name1, setName1] = useState('')
   const [name2, setName2] = useState('')
   const [reason, setReason] = useState('')
+
+  useModalKeys(open, { onClose: onCancel, onConfirm: handleConfirm })
 
   const transitions = useTransition(open, {
     from: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },

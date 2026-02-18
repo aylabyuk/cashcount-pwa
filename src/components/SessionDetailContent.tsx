@@ -14,7 +14,7 @@ import {
 import { formatDate, getCurrentSunday } from '../utils/date'
 import { formatCurrency } from '../utils/currency'
 import TotalsSummary from './TotalsSummary'
-import AddEnvelopeModal from './AddEnvelopeModal'
+import EnvelopeModal from './EnvelopeModal'
 import ConfirmDialog from './ConfirmDialog'
 import StatusConfirmModal from './StatusConfirmModal'
 
@@ -35,14 +35,12 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 
 interface Props {
   sessionId: string
-  onSelectEnvelope: (envelopeId: string) => void
   onNotFound: () => void
   isPanel?: boolean
 }
 
 export default function SessionDetailContent({
   sessionId,
-  onSelectEnvelope,
   onNotFound,
   isPanel,
 }: Props) {
@@ -50,6 +48,7 @@ export default function SessionDetailContent({
   const session = useAppSelector((s) => s.sessions.sessions.find((s) => s.id === sessionId))
 
   const [showAddModal, setShowAddModal] = useState(false)
+  const [editingEnvelopeId, setEditingEnvelopeId] = useState<string | null>(null)
   const [envelopeToDelete, setEnvelopeToDelete] = useState<{ id: string; number: number; total: number } | null>(null)
   const [showReportPrintedModal, setShowReportPrintedModal] = useState(false)
   const [showDepositedModal, setShowDepositedModal] = useState(false)
@@ -91,6 +90,8 @@ export default function SessionDetailContent({
     () => new Map(sortedEnvelopes.map((e, i) => [e.id, i + 1])),
     [sortedEnvelopes]
   )
+
+  const editingEnvelope = editingEnvelopeId ? session.envelopes.find((e) => e.id === editingEnvelopeId) : null
 
   const initialRef = useRef(true)
   useEffect(() => {
@@ -298,7 +299,7 @@ export default function SessionDetailContent({
                   className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group"
                 >
                   <button
-                    onClick={() => onSelectEnvelope(envelope.id)}
+                    onClick={() => setEditingEnvelopeId(envelope.id)}
                     className="w-full text-left p-3"
                   >
                     <div className="flex items-center justify-between">
@@ -352,7 +353,7 @@ export default function SessionDetailContent({
                   className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
                 >
                   <button
-                    onClick={() => onSelectEnvelope(envelope.id)}
+                    onClick={() => setEditingEnvelopeId(envelope.id)}
                     className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -403,11 +404,25 @@ export default function SessionDetailContent({
       )}
 
       {/* Add Envelope Modal */}
-      <AddEnvelopeModal
+      <EnvelopeModal
+        mode="add"
         open={showAddModal}
         onAdd={handleAddEnvelope}
-        onCancel={() => setShowAddModal(false)}
+        onClose={() => setShowAddModal(false)}
       />
+
+      {/* Edit Envelope Modal */}
+      {editingEnvelope && (
+        <EnvelopeModal
+          mode="edit"
+          open={editingEnvelopeId !== null}
+          sessionId={session.id}
+          envelope={editingEnvelope}
+          displayNumber={displayIndex.get(editingEnvelopeId!) ?? 0}
+          disabled={!editable}
+          onClose={() => setEditingEnvelopeId(null)}
+        />
+      )}
 
       {/* Status Confirmation Modals */}
       <StatusConfirmModal

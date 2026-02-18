@@ -4,7 +4,6 @@ import { useSpring, animated } from '@react-spring/web'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import SessionsListContent from './SessionsListContent'
 import SessionDetailContent from './SessionDetailContent'
-import EnvelopeFormContent from './EnvelopeFormContent'
 import SettingsPanel from './SettingsPanel'
 
 const PANEL_WIDTH = 360
@@ -27,15 +26,8 @@ export default function MasterDetailLayout() {
   }
 
   // Desktop: parse URL to determine right panel content
-  const envelopeMatch = matchPath(
-    '/session/:id/envelope/:envelopeId',
-    location.pathname
-  )
   const sessionMatch = matchPath('/session/:id', location.pathname)
-
-  const selectedSessionId =
-    envelopeMatch?.params.id ?? sessionMatch?.params.id ?? null
-  const selectedEnvelopeId = envelopeMatch?.params.envelopeId ?? null
+  const selectedSessionId = sessionMatch?.params.id ?? null
 
   return (
     <div className="relative h-full">
@@ -73,35 +65,11 @@ export default function MasterDetailLayout() {
 
       {/* Detail panel - always full width */}
       <div className="h-full flex flex-col overflow-hidden">
-        {selectedEnvelopeId && selectedSessionId ? (
-          <div className="flex-1 flex flex-col overflow-hidden w-full max-w-3xl mx-auto">
-            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 shrink-0">
-              <button
-                onClick={() => navigate(`/session/${selectedSessionId}`)}
-                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to session
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <EnvelopeFormContent
-                sessionId={selectedSessionId}
-                envelopeId={selectedEnvelopeId}
-                onNotFound={() => navigate('/', { replace: true })}
-              />
-            </div>
-          </div>
-        ) : selectedSessionId ? (
+        {selectedSessionId ? (
           <div className="flex-1 overflow-hidden w-full max-w-3xl mx-auto">
             <SessionDetailContent
               key={selectedSessionId}
               sessionId={selectedSessionId}
-              onSelectEnvelope={(eid) =>
-                navigate(`/session/${selectedSessionId}/envelope/${eid}`)
-              }
               onNotFound={() => navigate('/', { replace: true })}
               isPanel
             />

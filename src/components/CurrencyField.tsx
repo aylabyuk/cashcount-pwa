@@ -11,8 +11,12 @@ interface Props {
 export default function CurrencyField({ label, cents, onChange, disabled }: Props) {
   const [text, setText] = useState(() => centsToDecimalString(cents))
 
+  // Only sync from prop if the value actually differs from local text
+  // (e.g. external reset), not on every keystroke
   useEffect(() => {
-    setText(centsToDecimalString(cents))
+    if (parseCents(text) !== cents) {
+      setText(centsToDecimalString(cents))
+    }
   }, [cents])
 
   function handleChange(value: string) {

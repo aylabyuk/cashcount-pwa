@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DenominationRow from './DenominationRow'
 import CurrencyField from './CurrencyField'
 import { formatCurrency } from '../utils/currency'
@@ -26,7 +26,32 @@ export default function AddEnvelopeModal({ open, onAdd, onCancel }: Props) {
   const [coinsAmount, setCoinsAmount] = useState(0)
   const [chequeAmount, setChequeAmount] = useState(0)
 
-  if (!open) return null
+  const [mounted, setMounted] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const animatingOut = useRef(false)
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      // Trigger enter animation on next frame
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setVisible(true))
+      })
+    } else if (mounted) {
+      // Trigger exit animation
+      animatingOut.current = true
+      setVisible(false)
+    }
+  }, [open])
+
+  function handleTransitionEnd() {
+    if (animatingOut.current) {
+      animatingOut.current = false
+      setMounted(false)
+    }
+  }
+
+  if (!mounted) return null
 
   const cashTotalCents =
     count100 * 10000 +
@@ -37,9 +62,7 @@ export default function AddEnvelopeModal({ open, onAdd, onCancel }: Props) {
 
   const totalCents = cashTotalCents + coinsAmount + chequeAmount
 
-  function handleAdd() {
-    onAdd({ count100, count50, count20, count10, count5, coinsAmount, chequeAmount })
-    // Reset
+  function resetFields() {
     setCount100(0)
     setCount50(0)
     setCount20(0)
@@ -49,21 +72,26 @@ export default function AddEnvelopeModal({ open, onAdd, onCancel }: Props) {
     setChequeAmount(0)
   }
 
+  function handleAdd() {
+    onAdd({ count100, count50, count20, count10, count5, coinsAmount, chequeAmount })
+    resetFields()
+  }
+
   function handleCancel() {
-    setCount100(0)
-    setCount50(0)
-    setCount20(0)
-    setCount10(0)
-    setCount5(0)
-    setCoinsAmount(0)
-    setChequeAmount(0)
+    resetFields()
     onCancel()
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="fixed inset-0 bg-black/40" onClick={handleCancel} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-t-xl sm:rounded-xl shadow-xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <div
+        className={`fixed inset-0 bg-black/40 transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        onClick={handleCancel}
+      />
+      <div
+        className={`relative bg-white dark:bg-gray-800 rounded-t-xl sm:rounded-xl shadow-xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
+        onTransitionEnd={handleTransitionEnd}
+      >
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
           <button onClick={handleCancel} className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
             Cancel

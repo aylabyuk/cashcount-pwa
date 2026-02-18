@@ -34,14 +34,14 @@ export default function SessionsListPage() {
   const deleteTarget = sessions.find((s) => s.id === sessionToDelete)
 
   return (
-    <div className="p-4">
+    <div className="p-4 pb-20">
       {sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
           <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-2.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
           <p className="text-lg font-medium mb-1">No Sessions</p>
-          <p className="text-sm">Tap + to start a new counting session.</p>
+          <p className="text-sm">Start a new counting session below.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -78,13 +78,14 @@ export default function SessionsListPage() {
         </div>
       )}
 
-      {/* FAB */}
-      <button
-        onClick={handleAddSession}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl"
-      >
-        +
-      </button>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900">
+        <button
+          onClick={handleAddSession}
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
+        >
+          New Session
+        </button>
+      </div>
 
       {/* Delete confirmation */}
       <ConfirmDialog

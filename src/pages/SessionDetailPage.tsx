@@ -70,7 +70,7 @@ export default function SessionDetailPage() {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 pb-20 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">
@@ -94,7 +94,7 @@ export default function SessionDetailPage() {
         <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Envelopes</h3>
         {sortedEnvelopes.length === 0 ? (
           <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-            No envelopes yet. Tap + to add one.
+            No envelopes yet. Add one below.
           </div>
         ) : (
           <div className="space-y-1">
@@ -130,13 +130,14 @@ export default function SessionDetailPage() {
         )}
       </div>
 
-      {/* FAB */}
-      <button
-        onClick={handleAddClick}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl"
-      >
-        +
-      </button>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900">
+        <button
+          onClick={handleAddClick}
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
+        >
+          Add Envelope
+        </button>
+      </div>
 
       {/* Add Envelope Modal */}
       <AddEnvelopeModal

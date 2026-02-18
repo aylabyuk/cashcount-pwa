@@ -12,10 +12,17 @@ export interface Envelope {
   chequeAmount: number // cents
 }
 
+export type SessionStatus = 'active' | 'report_printed' | 'deposited' | 'no_donations'
+
 export interface CountingSession {
   id: string
   date: string // YYYY-MM-DD, always a Sunday
   envelopes: Envelope[]
+  status: SessionStatus
+  reportPrintedAt?: string   // ISO datetime
+  depositedAt?: string       // ISO datetime
+  depositedBy?: [string, string] // two depositor names
+  noDonationsAt?: string         // ISO datetime
 }
 
 interface SessionsState {
@@ -78,6 +85,7 @@ const sessionsSlice = createSlice({
         id: crypto.randomUUID(),
         date: action.payload.date,
         envelopes: [],
+        status: 'active',
       })
       state.sessions.sort((a, b) => b.date.localeCompare(a.date))
     },
@@ -118,6 +126,35 @@ const sessionsSlice = createSlice({
         (e) => e.id !== action.payload.envelopeId
       )
     },
+    markReportPrinted(state, action: PayloadAction<string>) {
+      const session = state.sessions.find((s) => s.id === action.payload)
+      if (!session || session.status !== 'active') return
+      session.status = 'report_printed'
+      session.reportPrintedAt = new Date().toISOString()
+    },
+    markDeposited(
+      state,
+      action: PayloadAction<{ sessionId: string; name1: string; name2: string }>
+    ) {
+      const session = state.sessions.find((s) => s.id === action.payload.sessionId)
+      if (!session || session.status !== 'report_printed') return
+      session.status = 'deposited'
+      session.depositedAt = new Date().toISOString()
+      session.depositedBy = [action.payload.name1, action.payload.name2]
+    },
+    markNoDonations(state, action: PayloadAction<string>) {
+      const session = state.sessions.find((s) => s.id === action.payload)
+      if (!session || session.status !== 'active') return
+      session.status = 'no_donations'
+      session.noDonationsAt = new Date().toISOString()
+      session.envelopes = []
+    },
+    reactivateSession(state, action: PayloadAction<string>) {
+      const session = state.sessions.find((s) => s.id === action.payload)
+      if (!session || session.status !== 'no_donations') return
+      session.status = 'active'
+      session.noDonationsAt = undefined
+    },
   },
 })
 
@@ -127,6 +164,10 @@ export const {
   addEnvelope,
   updateEnvelope,
   deleteEnvelope,
+  markReportPrinted,
+  markDeposited,
+  markNoDonations,
+  reactivateSession,
 } = sessionsSlice.actions
 
 export default sessionsSlice.reducer

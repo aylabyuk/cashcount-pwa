@@ -1,12 +1,36 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '../store'
-import { addEnvelope, deleteEnvelope, getEnvelopeTotal, getEnvelopeCashTotal } from '../store/sessionsSlice'
-import { formatDate, isSessionLocked } from '../utils/date'
+import {
+  addEnvelope,
+  deleteEnvelope,
+  markReportPrinted,
+  markDeposited,
+  markNoDonations,
+  reactivateSession,
+  getEnvelopeTotal,
+  getEnvelopeCashTotal,
+} from '../store/sessionsSlice'
+import { formatDate, getCurrentSunday } from '../utils/date'
 import { formatCurrency } from '../utils/currency'
 import TotalsSummary from './TotalsSummary'
 import AddEnvelopeModal from './AddEnvelopeModal'
 import ConfirmDialog from './ConfirmDialog'
-import AlertDialog from './AlertDialog'
+import StatusConfirmModal from './StatusConfirmModal'
+
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  report_printed: {
+    label: 'Report Printed',
+    className: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30',
+  },
+  deposited: {
+    label: 'Deposited',
+    className: 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30',
+  },
+  no_donations: {
+    label: 'No Donations',
+    className: 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800',
+  },
+}
 
 interface Props {
   sessionId: string
@@ -25,8 +49,23 @@ export default function SessionDetailContent({
   const session = useAppSelector((s) => s.sessions.sessions.find((s) => s.id === sessionId))
 
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showLockedAlert, setShowLockedAlert] = useState(false)
   const [envelopeToDelete, setEnvelopeToDelete] = useState<{ id: string; number: number; total: number } | null>(null)
+  const [showReportPrintedModal, setShowReportPrintedModal] = useState(false)
+  const [showDepositedModal, setShowDepositedModal] = useState(false)
+  const [showNoDonationsConfirm, setShowNoDonationsConfirm] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showMenu) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showMenu])
 
   if (!session) {
     return (
@@ -39,16 +78,11 @@ export default function SessionDetailContent({
     )
   }
 
-  const locked = isSessionLocked(session.date)
+  const status = session.status
+  const editable = status === 'active'
+  const badge = STATUS_BADGE[status]
+  const canReactivate = status === 'no_donations' && session.date === getCurrentSunday()
   const sortedEnvelopes = [...session.envelopes].sort((a, b) => a.number - b.number)
-
-  function handleAddClick() {
-    if (locked) {
-      setShowLockedAlert(true)
-    } else {
-      setShowAddModal(true)
-    }
-  }
 
   function handleAddEnvelope(envelope: {
     count100: number
@@ -64,10 +98,6 @@ export default function SessionDetailContent({
   }
 
   function handleDeleteClick(envelope: { id: string; number: number }) {
-    if (locked) {
-      setShowLockedAlert(true)
-      return
-    }
     const total = getEnvelopeTotal(session!.envelopes.find((e) => e.id === envelope.id)!)
     setEnvelopeToDelete({ id: envelope.id, number: envelope.number, total })
   }
@@ -79,6 +109,25 @@ export default function SessionDetailContent({
     }
   }
 
+  function handleMarkReportPrinted() {
+    dispatch(markReportPrinted(session!.id))
+    setShowReportPrintedModal(false)
+  }
+
+  function handleMarkDeposited(name1: string, name2: string) {
+    dispatch(markDeposited({ sessionId: session!.id, name1, name2 }))
+    setShowDepositedModal(false)
+  }
+
+  function handleMarkNoDonations() {
+    dispatch(markNoDonations(session!.id))
+    setShowNoDonationsConfirm(false)
+  }
+
+  function handleReactivate() {
+    dispatch(reactivateSession(session!.id))
+  }
+
   return (
     <div className={isPanel ? 'h-full overflow-y-auto' : ''}>
       <div className={isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'}>
@@ -88,24 +137,93 @@ export default function SessionDetailContent({
             {formatDate(session.date)} ({session.envelopes.length})
           </h2>
           <div className="flex items-center gap-2">
-            {locked && (
-              <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-                Locked
+            {badge && (
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${badge.className}`}>
+                {badge.label}
               </span>
             )}
-            {isPanel && !locked && (
+            {isPanel && editable && (
               <button
-                onClick={handleAddClick}
+                onClick={() => setShowAddModal(true)}
                 className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 Add Envelope
               </button>
             )}
+            {(status === 'active' || status === 'report_printed' || canReactivate) && (
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30">
+                    {status === 'active' && (
+                      <>
+                        <button
+                          onClick={() => { setShowMenu(false); setShowReportPrintedModal(true) }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-amber-700 dark:text-amber-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        >
+                          Mark Report Printed
+                        </button>
+                        <button
+                          onClick={() => { setShowMenu(false); setShowNoDonationsConfirm(true) }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                        >
+                          No Donations
+                        </button>
+                      </>
+                    )}
+                    {status === 'report_printed' && (
+                      <button
+                        onClick={() => { setShowMenu(false); setShowDepositedModal(true) }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-green-700 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      >
+                        Mark as Deposited
+                      </button>
+                    )}
+                    {canReactivate && (
+                      <button
+                        onClick={() => { setShowMenu(false); handleReactivate() }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      >
+                        Reactivate Session
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Deposit info */}
+        {status === 'deposited' && session.depositedBy && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 space-y-0.5">
+            <div>Deposited by <span className="font-medium">{session.depositedBy[0]}</span> and <span className="font-medium">{session.depositedBy[1]}</span></div>
+            {session.depositedAt && (
+              <div>{new Date(session.depositedAt).toLocaleString()}</div>
+            )}
+          </div>
+        )}
+
+        {/* Report printed info */}
+        {status === 'report_printed' && session.reportPrintedAt && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
+            Report printed {new Date(session.reportPrintedAt).toLocaleString()}
+          </div>
+        )}
+
+        {/* No donations info */}
+        {status === 'no_donations' && session.noDonationsAt && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
+            Marked as no donations {new Date(session.noDonationsAt).toLocaleString()}
+          </div>
+        )}
 
         {/* Totals Summary */}
         <TotalsSummary session={session} />
@@ -117,13 +235,13 @@ export default function SessionDetailContent({
             No envelopes yet.
           </div>
         ) : isPanel ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {sortedEnvelopes.map((envelope) => {
               const cashTotal = getEnvelopeCashTotal(envelope)
               return (
                 <div
                   key={envelope.id}
-                  className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group w-36"
+                  className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group"
                 >
                   <button
                     onClick={() => onSelectEnvelope(envelope.id)}
@@ -131,7 +249,7 @@ export default function SessionDetailContent({
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-gray-500 dark:text-gray-400">#{envelope.number}</span>
-                      {!locked && (
+                      {editable && (
                         <div className="w-5" />
                       )}
                     </div>
@@ -153,7 +271,7 @@ export default function SessionDetailContent({
                       </div>
                     </div>
                   </button>
-                  {!locked && (
+                  {editable && (
                     <button
                       onClick={() => handleDeleteClick(envelope)}
                       className="absolute top-1.5 right-1.5 p-1 rounded text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400"
@@ -192,7 +310,7 @@ export default function SessionDetailContent({
                       <span>Cheque {formatCurrency(envelope.chequeAmount)}</span>
                     </div>
                   </button>
-                  {!locked && (
+                  {editable && (
                     <button
                       onClick={() => handleDeleteClick(envelope)}
                       className="px-3 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 border-l border-gray-200 dark:border-gray-700"
@@ -210,11 +328,12 @@ export default function SessionDetailContent({
         <div className="h-40" />
       </div>
 
-      {!isPanel && (
+      {/* Bottom action bar (mobile) */}
+      {!isPanel && editable && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div className="max-w-2xl mx-auto">
             <button
-              onClick={handleAddClick}
+              onClick={() => setShowAddModal(true)}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
             >
               Add Envelope
@@ -230,12 +349,32 @@ export default function SessionDetailContent({
         onCancel={() => setShowAddModal(false)}
       />
 
-      {/* Locked Alert */}
-      <AlertDialog
-        open={showLockedAlert}
-        title="Session Locked"
-        message="This session is locked because the week has passed. You can still view the records but cannot add, edit, or delete envelopes."
-        onClose={() => setShowLockedAlert(false)}
+      {/* Status Confirmation Modals */}
+      <StatusConfirmModal
+        type="report_printed"
+        open={showReportPrintedModal}
+        onConfirm={handleMarkReportPrinted}
+        onCancel={() => setShowReportPrintedModal(false)}
+      />
+      <StatusConfirmModal
+        type="deposited"
+        open={showDepositedModal}
+        onConfirm={handleMarkDeposited}
+        onCancel={() => setShowDepositedModal(false)}
+      />
+
+      {/* No Donations Confirmation */}
+      <ConfirmDialog
+        open={showNoDonationsConfirm}
+        title="Mark as No Donations?"
+        message={
+          session.envelopes.length > 0
+            ? `You have ${session.envelopes.length} envelope${session.envelopes.length > 1 ? 's' : ''} recorded for this Sunday. Marking it as "No Donations" will wipe all of them permanently. You can reactivate this session later, but the envelope data will be gone for good.`
+            : 'This will mark the session as having no donations received this Sunday. You can always reactivate it later if needed.'
+        }
+        confirmLabel="Yes, No Donations"
+        onConfirm={handleMarkNoDonations}
+        onCancel={() => setShowNoDonationsConfirm(false)}
       />
 
       {/* Delete Envelope Confirmation */}

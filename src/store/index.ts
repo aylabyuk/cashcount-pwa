@@ -1,7 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
-import sessionsReducer from './sessionsSlice'
+import sessionsReducer, { type CountingSession } from './sessionsSlice'
 import settingsReducer from './settingsSlice'
+import mockData from '../data/mockSessions.json'
 
 const STORAGE_KEY = 'cashcount_sessions'
 const SETTINGS_KEY = 'cashcount_settings'
@@ -9,9 +10,20 @@ const SETTINGS_KEY = 'cashcount_settings'
 function loadSessions() {
   try {
     const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : undefined
+    if (!data) return undefined
+    return migrateSessions(JSON.parse(data))
   } catch {
     return undefined
+  }
+}
+
+function migrateSessions(data: { sessions: Record<string, unknown>[] }): { sessions: CountingSession[] } {
+  return {
+    ...data,
+    sessions: data.sessions.map((s) => ({
+      ...s,
+      status: s.status ?? 'active',
+    })) as CountingSession[],
   }
 }
 
@@ -30,7 +42,7 @@ export const store = configureStore({
     settings: settingsReducer,
   },
   preloadedState: {
-    sessions: loadSessions() ?? { sessions: [] },
+    sessions: loadSessions() ?? migrateSessions(mockData),
     settings: loadSettings() ?? { theme: 'system' as const },
   },
 })

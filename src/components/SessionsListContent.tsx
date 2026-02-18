@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppSelector, useAppDispatch } from '../store'
 import { addSession, deleteSession, getSessionTotals } from '../store/sessionsSlice'
-import { formatDate, isSessionLocked, getCurrentSunday } from '../utils/date'
+import { formatDate, getCurrentSunday } from '../utils/date'
 import { formatCurrency } from '../utils/currency'
 import ConfirmDialog from './ConfirmDialog'
 import AlertDialog from './AlertDialog'
@@ -48,8 +48,16 @@ export default function SessionsListContent({
   const deleteTarget = sessions.find((s) => s.id === sessionToDelete)
 
   return (
-    <div className={isPanel ? 'flex flex-col h-full' : ''}>
+    <div className={isPanel ? 'flex flex-col flex-1 min-h-0' : ''}>
       <div className={isPanel ? 'flex-1 overflow-y-auto p-4' : 'p-4 pb-20'}>
+        {isPanel && (
+          <button
+            onClick={handleAddSession}
+            className="w-full text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 py-3"
+          >
+            New Session
+          </button>
+        )}
         {sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
             <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +70,7 @@ export default function SessionsListContent({
           <div className="space-y-2">
             {sessions.map((session) => {
               const totals = getSessionTotals(session)
-              const locked = isSessionLocked(session.date)
+              const status = session.status
               const isSelected = session.id === selectedSessionId
               return (
                 <button
@@ -78,10 +86,20 @@ export default function SessionsListContent({
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-semibold">{formatDate(session.date)}</span>
-                        {locked && (
-                          <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                          </svg>
+                        {status === 'report_printed' && (
+                          <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full">
+                            Printed
+                          </span>
+                        )}
+                        {status === 'deposited' && (
+                          <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
+                            Deposited
+                          </span>
+                        )}
+                        {status === 'no_donations' && (
+                          <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">
+                            No Donations
+                          </span>
                         )}
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -96,14 +114,6 @@ export default function SessionsListContent({
               )
             })}
           </div>
-        )}
-        {isPanel && (
-          <button
-            onClick={handleAddSession}
-            className="w-full text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 py-3"
-          >
-            New Session
-          </button>
         )}
       </div>
 

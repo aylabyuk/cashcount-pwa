@@ -1,6 +1,5 @@
 import { useAppSelector, useAppDispatch } from '../store'
 import { updateEnvelope, getEnvelopeCashTotal } from '../store/sessionsSlice'
-import { isSessionLocked } from '../utils/date'
 import { formatCurrency } from '../utils/currency'
 import DenominationRow from './DenominationRow'
 import CurrencyField from './CurrencyField'
@@ -27,7 +26,7 @@ export default function EnvelopeFormContent({ sessionId, envelopeId, onNotFound 
     )
   }
 
-  const locked = isSessionLocked(session.date)
+  const locked = session.status !== 'active'
 
   function update(changes: Record<string, number>) {
     dispatch(updateEnvelope({ sessionId: session!.id, envelopeId: envelope!.id, changes }))

@@ -20,6 +20,7 @@ export interface CountingSession {
   envelopes: Envelope[]
   status: SessionStatus
   reportPrintedAt?: string   // ISO datetime
+  batchNumber?: string       // required when marking report printed
   depositedAt?: string       // ISO datetime
   depositedBy?: [string, string] // two depositor names
   noDonationsAt?: string         // ISO datetime
@@ -127,11 +128,12 @@ const sessionsSlice = createSlice({
         (e) => e.id !== action.payload.envelopeId
       )
     },
-    markReportPrinted(state, action: PayloadAction<string>) {
-      const session = state.sessions.find((s) => s.id === action.payload)
+    markReportPrinted(state, action: PayloadAction<{ sessionId: string; batchNumber: string }>) {
+      const session = state.sessions.find((s) => s.id === action.payload.sessionId)
       if (!session || session.status !== 'active') return
       session.status = 'report_printed'
       session.reportPrintedAt = new Date().toISOString()
+      session.batchNumber = action.payload.batchNumber
     },
     markDeposited(
       state,

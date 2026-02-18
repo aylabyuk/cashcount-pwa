@@ -5,7 +5,7 @@ import { useModalKeys } from '../hooks/useModalKeys'
 interface ReportPrintedProps {
   type: 'report_printed'
   open: boolean
-  onConfirm: () => void
+  onConfirm: (batchNumber: string) => void
   onCancel: () => void
 }
 
@@ -28,6 +28,7 @@ type Props = ReportPrintedProps | DepositedProps | NoDonationsProps
 
 export default function StatusConfirmModal(props: Props) {
   const { type, open, onCancel } = props
+  const [batchNumber, setBatchNumber] = useState('')
   const [name1, setName1] = useState('')
   const [name2, setName2] = useState('')
   const [reason, setReason] = useState('')
@@ -40,6 +41,7 @@ export default function StatusConfirmModal(props: Props) {
     leave: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },
     config: { tension: 300, friction: 30 },
     onDestroyed: () => {
+      setBatchNumber('')
       setName1('')
       setName2('')
       setReason('')
@@ -47,23 +49,26 @@ export default function StatusConfirmModal(props: Props) {
   })
 
   function handleConfirm() {
-    if (type === 'deposited') {
+    if (type === 'report_printed') {
+      if (!batchNumber.trim()) return
+      props.onConfirm(batchNumber.trim())
+    } else if (type === 'deposited') {
       if (!name1.trim() || !name2.trim()) return
       props.onConfirm(name1.trim(), name2.trim())
     } else if (type === 'no_donations') {
       if (!reason.trim()) return
       props.onConfirm(reason.trim())
-    } else {
-      props.onConfirm()
     }
   }
 
   const canConfirm =
-    type === 'deposited'
-      ? name1.trim() && name2.trim()
-      : type === 'no_donations'
-        ? reason.trim()
-        : true
+    type === 'report_printed'
+      ? batchNumber.trim()
+      : type === 'deposited'
+        ? name1.trim() && name2.trim()
+        : type === 'no_donations'
+          ? reason.trim()
+          : true
 
   const title =
     type === 'deposited'
@@ -98,6 +103,22 @@ export default function StatusConfirmModal(props: Props) {
         >
           <h2 className="text-lg font-semibold mb-2">{title}</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{description}</p>
+
+          {type === 'report_printed' && (
+            <div className="mb-6">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Batch Number
+              </label>
+              <input
+                type="text"
+                value={batchNumber}
+                onChange={(e) => setBatchNumber(e.target.value)}
+                placeholder="e.g. 81014103"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+              />
+            </div>
+          )}
 
           {type === 'deposited' && (
             <div className="space-y-3 mb-6">

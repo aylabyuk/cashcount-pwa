@@ -1,38 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { useTransition, animated } from '@react-spring/web'
-import { SPRING_SNAPPY } from '../../utils/constants'
-import { useAppSelector, useAppDispatch } from '../../store'
-import {
-  addEnvelope,
-  deleteEnvelope,
-  markReportPrinted,
-  markDeposited,
-  markNoDonations,
-  reactivateSession,
-  getEnvelopeTotal,
-  getEnvelopeCashTotal,
-} from '../../store/sessionsSlice'
-import { formatDate, getCurrentSunday } from '../../utils/date'
-import { formatCurrency } from '../../utils/currency'
+import { formatDate } from '../../utils/date'
 import TotalsSummary from '../TotalsSummary'
-import EnvelopeModal from '../EnvelopeModal'
-import ConfirmDialog from '../ConfirmDialog'
-import StatusConfirmModal from '../StatusConfirmModal'
-
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  report_printed: {
-    label: 'Report Printed',
-    className: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30',
-  },
-  deposited: {
-    label: 'Deposited',
-    className: 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30',
-  },
-  no_donations: {
-    label: 'No Donations',
-    className: 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800',
-  },
-}
+import SessionDetailHeader from './SessionDetailHeader'
+import NoDonationsView from './NoDonationsView'
+import EnvelopeCards from './EnvelopeCards'
+import SessionDetailModals from './SessionDetailModals'
+import { useSessionDetail } from './useSessionDetail'
+import { useSessionActions } from './useSessionActions'
 
 interface Props {
   sessionId: string
@@ -45,28 +18,8 @@ export default function SessionDetailContent({
   onNotFound,
   isPanel,
 }: Props) {
-  const dispatch = useAppDispatch()
-  const session = useAppSelector((s) => s.sessions.sessions.find((s) => s.id === sessionId))
-
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingEnvelopeId, setEditingEnvelopeId] = useState<string | null>(null)
-  const [envelopeToDelete, setEnvelopeToDelete] = useState<{ id: string; number: number; total: number } | null>(null)
-  const [showReportPrintedModal, setShowReportPrintedModal] = useState(false)
-  const [showDepositedModal, setShowDepositedModal] = useState(false)
-  const [showNoDonationsConfirm, setShowNoDonationsConfirm] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!showMenu) return
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [showMenu])
+  const { session, status, editable, badge, canReactivate, sortedEnvelopes, displayIndex } = useSessionDetail(sessionId)
+  const actions = useSessionActions(session, displayIndex)
 
   if (!session) {
     return (
@@ -79,157 +32,23 @@ export default function SessionDetailContent({
     )
   }
 
-  const status = session.status
-  const editable = status === 'active'
-  const badge = STATUS_BADGE[status]
-  const canReactivate = status === 'no_donations' && session.date === getCurrentSunday()
-  const sortedEnvelopes = useMemo(
-    () => [...session.envelopes].sort((a, b) => a.number - b.number),
-    [session.envelopes]
-  )
-  const displayIndex = useMemo(
-    () => new Map(sortedEnvelopes.map((e, i) => [e.id, i + 1])),
-    [sortedEnvelopes]
-  )
-
-  const editingEnvelope = editingEnvelopeId ? session.envelopes.find((e) => e.id === editingEnvelopeId) : null
-
-  const initialRef = useRef(true)
-  useEffect(() => {
-    initialRef.current = false
-  }, [])
-
-  const envelopeTransitions = useTransition(sortedEnvelopes, {
-    keys: (e) => e.id,
-    from: initialRef.current
-      ? { opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' }
-      : { opacity: 0, transform: 'scale(0.9)', height: 0, marginBottom: 0, width: '0%' },
-    enter: initialRef.current
-      ? { opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' }
-      : () => async (next) => {
-          await new Promise((r) => setTimeout(r, 150))
-          await next({ opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' })
-        },
-    leave: { opacity: 0, transform: 'scale(0.9)', height: 0, marginBottom: 0, width: '0%' },
-    config: SPRING_SNAPPY,
-  })
-
-  function handleAddEnvelope(envelope: {
-    count100: number
-    count50: number
-    count20: number
-    count10: number
-    count5: number
-    coinsAmount: number
-    chequeAmount: number
-  }) {
-    dispatch(addEnvelope({ sessionId: session!.id, envelope }))
-    setShowAddModal(false)
-  }
-
-  function handleDeleteClick(envelope: { id: string; number: number }) {
-    const total = getEnvelopeTotal(session!.envelopes.find((e) => e.id === envelope.id)!)
-    setEnvelopeToDelete({ id: envelope.id, number: displayIndex.get(envelope.id) ?? envelope.number, total })
-  }
-
-  function handleConfirmDelete() {
-    if (envelopeToDelete) {
-      dispatch(deleteEnvelope({ sessionId: session!.id, envelopeId: envelopeToDelete.id }))
-      setEnvelopeToDelete(null)
-    }
-  }
-
-  function handleMarkReportPrinted(batchNumber: string) {
-    dispatch(markReportPrinted({ sessionId: session!.id, batchNumber }))
-    setShowReportPrintedModal(false)
-  }
-
-  function handleMarkDeposited(name1: string, name2: string) {
-    dispatch(markDeposited({ sessionId: session!.id, name1, name2 }))
-    setShowDepositedModal(false)
-  }
-
-  function handleMarkNoDonations(reason: string) {
-    dispatch(markNoDonations({ sessionId: session!.id, reason }))
-    setShowNoDonationsConfirm(false)
-  }
-
-  function handleReactivate() {
-    dispatch(reactivateSession(session!.id))
-  }
-
   return (
     <div className={isPanel ? 'h-full overflow-y-auto' : ''}>
       <div className={`${isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'} ${status === 'no_donations' ? `flex flex-col ${isPanel ? 'h-full' : 'min-h-[calc(100vh-3.5rem)]'}` : ''}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            {formatDate(session.date)} ({session.envelopes.length})
-          </h2>
-          <div className="flex items-center gap-2">
-            {badge && (
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${badge.className}`}>
-                {badge.label}
-              </span>
-            )}
-            {isPanel && editable && (
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-              >
-                Add Envelope
-              </button>
-            )}
-            {(status === 'active' || status === 'report_printed' || canReactivate) && (
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-                {showMenu && (
-                  <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30">
-                    {status === 'active' && (
-                      <>
-                        <button
-                          onClick={() => { setShowMenu(false); setShowReportPrintedModal(true) }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-amber-700 dark:text-amber-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                        >
-                          Mark Report Printed
-                        </button>
-                        <button
-                          onClick={() => { setShowMenu(false); setShowNoDonationsConfirm(true) }}
-                          className="w-full text-left px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                        >
-                          No Donations
-                        </button>
-                      </>
-                    )}
-                    {status === 'report_printed' && (
-                      <button
-                        onClick={() => { setShowMenu(false); setShowDepositedModal(true) }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-green-700 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                      >
-                        Mark as Deposited
-                      </button>
-                    )}
-                    {canReactivate && (
-                      <button
-                        onClick={() => { setShowMenu(false); handleReactivate() }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                      >
-                        Reactivate Session
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        <SessionDetailHeader
+          date={formatDate(session.date)}
+          envelopeCount={session.envelopes.length}
+          badge={badge}
+          editable={editable}
+          isPanel={!!isPanel}
+          status={status}
+          canReactivate={canReactivate}
+          onAdd={() => actions.setShowAddModal(true)}
+          onMarkReportPrinted={() => actions.setShowReportPrintedModal(true)}
+          onMarkDeposited={() => actions.setShowDepositedModal(true)}
+          onMarkNoDonations={() => actions.setShowNoDonationsConfirm(true)}
+          onReactivate={actions.handleReactivate}
+        />
 
         {/* Deposit info */}
         {status === 'deposited' && session.depositedBy && (
@@ -251,154 +70,25 @@ export default function SessionDetailContent({
 
         {/* No donations view */}
         {status === 'no_donations' ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12H4m16 0l-4-4m4 4l-4 4" />
-              </svg>
-            </div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">No Donations Received</p>
-            {session.noDonationsReason && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 max-w-55 italic">
-                "{session.noDonationsReason}"
-              </p>
-            )}
-            {session.noDonationsAt && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
-                {new Date(session.noDonationsAt).toLocaleString()}
-              </p>
-            )}
-            {canReactivate && (
-              <button
-                onClick={handleReactivate}
-                className="mt-6 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-              >
-                Reactivate Session
-              </button>
-            )}
-          </div>
+          <NoDonationsView
+            reason={session.noDonationsReason}
+            recordedAt={session.noDonationsAt}
+            canReactivate={canReactivate}
+            onReactivate={actions.handleReactivate}
+          />
         ) : (
           <>
-            {/* Totals Summary */}
             <TotalsSummary session={session} />
-
-            {/* Envelopes */}
             <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2 mt-10!">Envelopes</h3>
-            {sortedEnvelopes.length === 0 ? (
-              <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-                No envelopes yet.
-              </div>
-            ) : isPanel ? (
-          <div className="flex flex-wrap -m-1">
-            {envelopeTransitions((style, envelope) => {
-              const cashTotal = getEnvelopeCashTotal(envelope)
-              return (
-                <animated.div style={{ width: style.width, overflow: 'hidden' }}>
-                <div className="p-1">
-                <animated.div
-                  style={{ opacity: style.opacity, transform: style.transform }}
-                  className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group"
-                >
-                  <button
-                    onClick={() => setEditingEnvelopeId(envelope.id)}
-                    className="w-full text-left p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">#{displayIndex.get(envelope.id)}</span>
-                      {editable && (
-                        <div className="w-5" />
-                      )}
-                    </div>
-                    <span className="text-sm font-bold font-mono text-center block mt-1 mb-2">
-                      {formatCurrency(getEnvelopeTotal(envelope))}
-                    </span>
-                    <div className="space-y-0.5 text-[11px] text-gray-400 dark:text-gray-500 font-mono">
-                      <div className="flex justify-between">
-                        <span>Cash</span>
-                        <span>{formatCurrency(cashTotal)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Coins</span>
-                        <span>{formatCurrency(envelope.coinsAmount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Cheque</span>
-                        <span>{formatCurrency(envelope.chequeAmount)}</span>
-                      </div>
-                    </div>
-                  </button>
-                  {editable && (
-                    <button
-                      onClick={() => handleDeleteClick(envelope)}
-                      className="absolute top-1.5 right-1.5 p-1 rounded text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                </animated.div>
-                </div>
-                </animated.div>
-              )
-            })}
-            {editable && (
-              <div style={{ width: '20%' }}>
-                <div className="p-1">
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="w-full min-h-[125.5px] rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 flex items-center justify-center"
-                  >
-                    <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            {envelopeTransitions((style, envelope) => {
-              const cashTotal = getEnvelopeCashTotal(envelope)
-              return (
-                <animated.div style={{ height: style.height, marginBottom: style.marginBottom, overflow: 'hidden' }}>
-                <animated.div
-                  style={{ opacity: style.opacity, transform: style.transform }}
-                  className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
-                >
-                  <button
-                    onClick={() => setEditingEnvelopeId(envelope.id)}
-                    className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Envelope #{displayIndex.get(envelope.id)}</span>
-                      <span className="text-sm font-bold font-mono">
-                        {formatCurrency(getEnvelopeTotal(envelope))}
-                      </span>
-                    </div>
-                    <div className="flex gap-3 text-[11px] text-gray-400 dark:text-gray-500 font-mono">
-                      <span>Cash {formatCurrency(cashTotal)}</span>
-                      <span>Coins {formatCurrency(envelope.coinsAmount)}</span>
-                      <span>Cheque {formatCurrency(envelope.chequeAmount)}</span>
-                    </div>
-                  </button>
-                  {editable && (
-                    <button
-                      onClick={() => handleDeleteClick(envelope)}
-                      className="px-3 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 border-l border-gray-200 dark:border-gray-700"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </animated.div>
-                </animated.div>
-              )
-            })}
-          </div>
-            )}
+            <EnvelopeCards
+              sortedEnvelopes={sortedEnvelopes}
+              displayIndex={displayIndex}
+              editable={editable}
+              isPanel={!!isPanel}
+              onEdit={(id) => actions.setEditingEnvelopeId(id)}
+              onDelete={actions.handleDeleteClick}
+              onAdd={() => actions.setShowAddModal(true)}
+            />
           </>
         )}
         <div className="h-40" />
@@ -409,7 +99,7 @@ export default function SessionDetailContent({
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div className="max-w-2xl mx-auto">
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => actions.setShowAddModal(true)}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
             >
               Add Envelope
@@ -418,61 +108,29 @@ export default function SessionDetailContent({
         </div>
       )}
 
-      {/* Add Envelope Modal */}
-      <EnvelopeModal
-        mode="add"
-        open={showAddModal}
-        onAdd={handleAddEnvelope}
-        onClose={() => setShowAddModal(false)}
-      />
-
-      {/* Edit Envelope Modal */}
-      {editingEnvelope && (
-        <EnvelopeModal
-          mode="edit"
-          open={editingEnvelopeId !== null}
-          sessionId={session.id}
-          envelope={editingEnvelope}
-          displayNumber={displayIndex.get(editingEnvelopeId!) ?? 0}
-          disabled={!editable}
-          onClose={() => setEditingEnvelopeId(null)}
-        />
-      )}
-
-      {/* Status Confirmation Modals */}
-      <StatusConfirmModal
-        type="report_printed"
-        open={showReportPrintedModal}
-        onConfirm={handleMarkReportPrinted}
-        onCancel={() => setShowReportPrintedModal(false)}
-      />
-      <StatusConfirmModal
-        type="deposited"
-        open={showDepositedModal}
-        onConfirm={handleMarkDeposited}
-        onCancel={() => setShowDepositedModal(false)}
-      />
-
-      {/* No Donations Confirmation */}
-      <StatusConfirmModal
-        type="no_donations"
-        open={showNoDonationsConfirm}
+      <SessionDetailModals
+        sessionId={session.id}
+        editable={editable}
         envelopeCount={session.envelopes.length}
-        onConfirm={handleMarkNoDonations}
-        onCancel={() => setShowNoDonationsConfirm(false)}
-      />
-
-      {/* Delete Envelope Confirmation */}
-      <ConfirmDialog
-        open={envelopeToDelete !== null}
-        title="Delete Envelope?"
-        message={
-          envelopeToDelete
-            ? `This will permanently delete Envelope #${envelopeToDelete.number} (${formatCurrency(envelopeToDelete.total)}). This cannot be undone.`
-            : ''
-        }
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setEnvelopeToDelete(null)}
+        displayIndex={displayIndex}
+        showAddModal={actions.showAddModal}
+        onCloseAddModal={() => actions.setShowAddModal(false)}
+        onAdd={actions.handleAddEnvelope}
+        editingEnvelopeId={actions.editingEnvelopeId}
+        editingEnvelope={actions.editingEnvelope}
+        onCloseEditModal={() => actions.setEditingEnvelopeId(null)}
+        showReportPrintedModal={actions.showReportPrintedModal}
+        onCancelReportPrinted={() => actions.setShowReportPrintedModal(false)}
+        onConfirmReportPrinted={actions.handleMarkReportPrinted}
+        showDepositedModal={actions.showDepositedModal}
+        onCancelDeposited={() => actions.setShowDepositedModal(false)}
+        onConfirmDeposited={actions.handleMarkDeposited}
+        showNoDonationsConfirm={actions.showNoDonationsConfirm}
+        onCancelNoDonations={() => actions.setShowNoDonationsConfirm(false)}
+        onConfirmNoDonations={actions.handleMarkNoDonations}
+        envelopeToDelete={actions.envelopeToDelete}
+        onCancelDelete={() => actions.setEnvelopeToDelete(null)}
+        onConfirmDelete={actions.handleConfirmDelete}
       />
     </div>
   )

@@ -21,3 +21,19 @@ export const CURRENCY_REGEX = /^\d*\.?\d{0,2}$/
 
 // Data retention
 export const PURGE_MONTHS = 6
+
+// Session status badges
+export const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  report_printed: {
+    label: 'Report Printed',
+    className: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30',
+  },
+  deposited: {
+    label: 'Deposited',
+    className: 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30',
+  },
+  no_donations: {
+    label: 'No Donations',
+    className: 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800',
+  },
+}

@@ -1,73 +1,23 @@
-import { useEffect, useState, useCallback } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { useAppSelector, useAppDispatch } from '../../store'
-import { purgeOldSessions } from '../../store/sessionsSlice'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { DESKTOP_BREAKPOINT, PURGE_MONTHS } from '../../utils/constants'
+import { useThemeSync } from '../../hooks/useThemeSync'
+import { usePurgeOldSessions } from '../../hooks/usePurgeOldSessions'
+import { DESKTOP_BREAKPOINT } from '../../utils/constants'
 import Toast from '../Toast'
 import appIcon from '../../assets/icon.png'
 
 export default function Layout() {
-  const theme = useAppSelector((s) => s.settings.theme)
-  const sessions = useAppSelector((s) => s.sessions.sessions)
-  const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const location = useLocation()
   const isDesktop = useMediaQuery(DESKTOP_BREAKPOINT)
 
-  const [toastMessage, setToastMessage] = useState('')
-  const handleToastClose = useCallback(() => setToastMessage(''), [])
-
-  // Purge sessions older than 6 months on first load
-  useEffect(() => {
-    const cutoff = new Date()
-    cutoff.setMonth(cutoff.getMonth() - PURGE_MONTHS)
-    const cutoffStr = cutoff.toISOString().slice(0, 10)
-    const oldCount = sessions.filter((s) => s.date < cutoffStr).length
-    if (oldCount > 0) {
-      dispatch(purgeOldSessions())
-      setToastMessage(
-        `${oldCount} session${oldCount > 1 ? 's' : ''} older than ${PURGE_MONTHS} months removed`
-      )
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useThemeSync()
+  const { toastMessage, handleToastClose } = usePurgeOldSessions()
 
   const isHome = location.pathname === '/'
-
-  // On desktop, all routes show the title (list panel is visible); gear only on mobile home
   const showTitle = isDesktop || isHome
   const showGear = !isDesktop && isHome
-  const showBack = isDesktop ? false : !isHome
-
-  useEffect(() => {
-    const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-    } else if (theme === 'light') {
-      root.classList.remove('dark')
-    } else {
-      // system
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        root.classList.add('dark')
-      } else {
-        root.classList.remove('dark')
-      }
-    }
-  }, [theme])
-
-  // Listen for system theme changes when set to "system"
-  useEffect(() => {
-    if (theme !== 'system') return
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) => {
-      document.documentElement.classList.toggle('dark', e.matches)
-    }
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [theme])
-
-  // On desktop with master-detail, use h-screen flex layout for panel heights
+  const showBack = !isDesktop && !isHome
   const isMasterDetail = isDesktop
 
   return (

@@ -79,8 +79,8 @@ export default function SessionDetailContent({
   }
 
   return (
-    <div className={isPanel ? 'flex flex-col h-full' : ''}>
-      <div className={isPanel ? 'flex-1 overflow-y-auto p-4 space-y-4' : 'p-4 pb-20 space-y-4'}>
+    <div className={isPanel ? 'h-full overflow-y-auto' : ''}>
+      <div className={isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
@@ -110,45 +110,44 @@ export default function SessionDetailContent({
         <TotalsSummary session={session} />
 
         {/* Envelopes */}
-        <div>
-          <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Envelopes</h3>
-          {sortedEnvelopes.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-              No envelopes yet.
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {sortedEnvelopes.map((envelope) => (
-                <div
-                  key={envelope.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
+        <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2 mt-10!">Envelopes</h3>
+        {sortedEnvelopes.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
+            No envelopes yet.
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {sortedEnvelopes.map((envelope) => (
+              <div
+                key={envelope.id}
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
+              >
+                <button
+                  onClick={() => onSelectEnvelope(envelope.id)}
+                  className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
                 >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Envelope #{envelope.number}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                      {formatCurrency(getEnvelopeTotal(envelope))}
+                    </span>
+                  </div>
+                </button>
+                {!locked && (
                   <button
-                    onClick={() => onSelectEnvelope(envelope.id)}
-                    className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
+                    onClick={() => handleDeleteClick(envelope)}
+                    className="px-3 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 border-l border-gray-200 dark:border-gray-700"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Envelope #{envelope.number}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                        {formatCurrency(getEnvelopeTotal(envelope))}
-                      </span>
-                    </div>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
-                  {!locked && (
-                    <button
-                      onClick={() => handleDeleteClick(envelope)}
-                      className="px-3 py-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 border-l border-gray-200 dark:border-gray-700"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="h-40" />
       </div>
 
       {!isPanel && (

@@ -6,6 +6,7 @@ import { formatCurrency } from '../utils/currency'
 import TotalsSummary from './TotalsSummary'
 import AddEnvelopeModal from './AddEnvelopeModal'
 import ConfirmDialog from './ConfirmDialog'
+import AlertDialog from './AlertDialog'
 
 interface Props {
   sessionId: string
@@ -171,25 +172,12 @@ export default function SessionDetailContent({
       />
 
       {/* Locked Alert */}
-      {showLockedAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setShowLockedAlert(false)} />
-          <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-sm w-full p-6">
-            <h2 className="text-lg font-semibold mb-2">Session Locked</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              This session is locked because the week has passed. You can still view the records but cannot add, edit, or delete envelopes.
-            </p>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowLockedAlert(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AlertDialog
+        open={showLockedAlert}
+        title="Session Locked"
+        message="This session is locked because the week has passed. You can still view the records but cannot add, edit, or delete envelopes."
+        onClose={() => setShowLockedAlert(false)}
+      />
 
       {/* Delete Envelope Confirmation */}
       <ConfirmDialog

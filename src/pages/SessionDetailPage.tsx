@@ -7,6 +7,7 @@ export default function SessionDetailPage() {
 
   return (
     <SessionDetailContent
+      key={id}
       sessionId={id!}
       onSelectEnvelope={(eid) => navigate(`/session/${id}/envelope/${eid}`)}
       onNotFound={() => navigate('/')}

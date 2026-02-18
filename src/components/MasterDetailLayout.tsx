@@ -97,6 +97,7 @@ export default function MasterDetailLayout() {
         ) : selectedSessionId ? (
           <div className="flex-1 overflow-hidden w-full max-w-3xl mx-auto">
             <SessionDetailContent
+              key={selectedSessionId}
               sessionId={selectedSessionId}
               onSelectEnvelope={(eid) =>
                 navigate(`/session/${selectedSessionId}/envelope/${eid}`)

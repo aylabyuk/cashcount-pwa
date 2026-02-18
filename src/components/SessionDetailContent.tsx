@@ -87,6 +87,10 @@ export default function SessionDetailContent({
     () => [...session.envelopes].sort((a, b) => a.number - b.number),
     [session.envelopes]
   )
+  const displayIndex = useMemo(
+    () => new Map(sortedEnvelopes.map((e, i) => [e.id, i + 1])),
+    [sortedEnvelopes]
+  )
 
   const initialRef = useRef(true)
   useEffect(() => {
@@ -96,15 +100,15 @@ export default function SessionDetailContent({
   const envelopeTransitions = useTransition(sortedEnvelopes, {
     keys: (e) => e.id,
     from: initialRef.current
-      ? { opacity: 1, transform: 'scale(1)' }
-      : { opacity: 0, transform: 'scale(0.9)' },
+      ? { opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' }
+      : { opacity: 0, transform: 'scale(0.9)', height: 0, marginBottom: 0, width: '0%' },
     enter: initialRef.current
-      ? { opacity: 1, transform: 'scale(1)' }
+      ? { opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' }
       : () => async (next) => {
           await new Promise((r) => setTimeout(r, 150))
-          await next({ opacity: 1, transform: 'scale(1)' })
+          await next({ opacity: 1, transform: 'scale(1)', height: 'auto', marginBottom: 4, width: '20%' })
         },
-    leave: { opacity: 0, transform: 'scale(0.9)' },
+    leave: { opacity: 0, transform: 'scale(0.9)', height: 0, marginBottom: 0, width: '0%' },
     config: { tension: 300, friction: 24 },
   })
 
@@ -123,7 +127,7 @@ export default function SessionDetailContent({
 
   function handleDeleteClick(envelope: { id: string; number: number }) {
     const total = getEnvelopeTotal(session!.envelopes.find((e) => e.id === envelope.id)!)
-    setEnvelopeToDelete({ id: envelope.id, number: envelope.number, total })
+    setEnvelopeToDelete({ id: envelope.id, number: displayIndex.get(envelope.id) ?? envelope.number, total })
   }
 
   function handleConfirmDelete() {
@@ -143,8 +147,8 @@ export default function SessionDetailContent({
     setShowDepositedModal(false)
   }
 
-  function handleMarkNoDonations() {
-    dispatch(markNoDonations(session!.id))
+  function handleMarkNoDonations(reason: string) {
+    dispatch(markNoDonations({ sessionId: session!.id, reason }))
     setShowNoDonationsConfirm(false)
   }
 
@@ -154,7 +158,7 @@ export default function SessionDetailContent({
 
   return (
     <div className={isPanel ? 'h-full overflow-y-auto' : ''}>
-      <div className={`${isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'} ${status === 'no_donations' ? 'flex flex-col h-full' : ''}`}>
+      <div className={`${isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'} ${status === 'no_donations' ? `flex flex-col ${isPanel ? 'h-full' : 'min-h-[calc(100vh-3.5rem)]'}` : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
@@ -251,9 +255,11 @@ export default function SessionDetailContent({
               </svg>
             </div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">No Donations Received</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 max-w-55">
-              This Sunday was marked as having no donations to count.
-            </p>
+            {session.noDonationsReason && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 max-w-55 italic">
+                "{session.noDonationsReason}"
+              </p>
+            )}
             {session.noDonationsAt && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
                 {new Date(session.noDonationsAt).toLocaleString()}
@@ -280,12 +286,14 @@ export default function SessionDetailContent({
                 No envelopes yet.
               </div>
             ) : isPanel ? (
-          <div className="grid grid-cols-5 gap-2">
+          <div className="flex flex-wrap -m-1">
             {envelopeTransitions((style, envelope) => {
               const cashTotal = getEnvelopeCashTotal(envelope)
               return (
+                <animated.div style={{ width: style.width, overflow: 'hidden' }}>
+                <div className="p-1">
                 <animated.div
-                  style={style}
+                  style={{ opacity: style.opacity, transform: style.transform }}
                   className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group"
                 >
                   <button
@@ -293,7 +301,7 @@ export default function SessionDetailContent({
                     className="w-full text-left p-3"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">#{envelope.number}</span>
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">#{displayIndex.get(envelope.id)}</span>
                       {editable && (
                         <div className="w-5" />
                       )}
@@ -327,16 +335,19 @@ export default function SessionDetailContent({
                     </button>
                   )}
                 </animated.div>
+                </div>
+                </animated.div>
               )
             })}
           </div>
         ) : (
-          <div className="space-y-1">
+          <div>
             {envelopeTransitions((style, envelope) => {
               const cashTotal = getEnvelopeCashTotal(envelope)
               return (
+                <animated.div style={{ height: style.height, marginBottom: style.marginBottom, overflow: 'hidden' }}>
                 <animated.div
-                  style={style}
+                  style={{ opacity: style.opacity, transform: style.transform }}
                   className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
                 >
                   <button
@@ -344,7 +355,7 @@ export default function SessionDetailContent({
                     className="flex-1 text-left px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2 rounded-l-lg"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Envelope #{envelope.number}</span>
+                      <span className="text-sm font-medium">Envelope #{displayIndex.get(envelope.id)}</span>
                       <span className="text-sm font-bold font-mono">
                         {formatCurrency(getEnvelopeTotal(envelope))}
                       </span>
@@ -365,6 +376,7 @@ export default function SessionDetailContent({
                       </svg>
                     </button>
                   )}
+                </animated.div>
                 </animated.div>
               )
             })}
@@ -411,15 +423,10 @@ export default function SessionDetailContent({
       />
 
       {/* No Donations Confirmation */}
-      <ConfirmDialog
+      <StatusConfirmModal
+        type="no_donations"
         open={showNoDonationsConfirm}
-        title="Mark as No Donations?"
-        message={
-          session.envelopes.length > 0
-            ? `You have ${session.envelopes.length} envelope${session.envelopes.length > 1 ? 's' : ''} recorded for this Sunday. Marking it as "No Donations" will wipe all of them permanently. You can reactivate this session later, but the envelope data will be gone for good.`
-            : 'This will mark the session as having no donations received this Sunday. You can always reactivate it later if needed.'
-        }
-        confirmLabel="Yes, No Donations"
+        envelopeCount={session.envelopes.length}
         onConfirm={handleMarkNoDonations}
         onCancel={() => setShowNoDonationsConfirm(false)}
       />

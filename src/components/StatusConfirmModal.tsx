@@ -15,12 +15,21 @@ interface DepositedProps {
   onCancel: () => void
 }
 
-type Props = ReportPrintedProps | DepositedProps
+interface NoDonationsProps {
+  type: 'no_donations'
+  open: boolean
+  envelopeCount: number
+  onConfirm: (reason: string) => void
+  onCancel: () => void
+}
+
+type Props = ReportPrintedProps | DepositedProps | NoDonationsProps
 
 export default function StatusConfirmModal(props: Props) {
   const { type, open, onCancel } = props
   const [name1, setName1] = useState('')
   const [name2, setName2] = useState('')
+  const [reason, setReason] = useState('')
 
   const transitions = useTransition(open, {
     from: { backdropOpacity: 0, scale: 0.95, dialogOpacity: 0 },
@@ -30,6 +39,7 @@ export default function StatusConfirmModal(props: Props) {
     onDestroyed: () => {
       setName1('')
       setName2('')
+      setReason('')
     },
   })
 
@@ -37,13 +47,36 @@ export default function StatusConfirmModal(props: Props) {
     if (type === 'deposited') {
       if (!name1.trim() || !name2.trim()) return
       props.onConfirm(name1.trim(), name2.trim())
+    } else if (type === 'no_donations') {
+      if (!reason.trim()) return
+      props.onConfirm(reason.trim())
     } else {
       props.onConfirm()
     }
   }
 
-  const isDeposited = type === 'deposited'
-  const canConfirm = isDeposited ? name1.trim() && name2.trim() : true
+  const canConfirm =
+    type === 'deposited'
+      ? name1.trim() && name2.trim()
+      : type === 'no_donations'
+        ? reason.trim()
+        : true
+
+  const title =
+    type === 'deposited'
+      ? 'Mark as Deposited?'
+      : type === 'no_donations'
+        ? 'Mark as No Donations?'
+        : 'Mark Report as Printed?'
+
+  const description =
+    type === 'deposited'
+      ? 'Record the deposit details. This action cannot be undone.'
+      : type === 'no_donations'
+        ? props.type === 'no_donations' && props.envelopeCount > 0
+          ? `You have ${props.envelopeCount} envelope${props.envelopeCount > 1 ? 's' : ''} recorded for this Sunday. Marking it as "No Donations" will permanently delete all envelope data. Please provide a reason.`
+          : 'This will mark the session as having no donations received. You can reactivate it later, but please provide a reason.'
+        : 'This will mark the report as printed and recorded in the church system. Envelopes can no longer be modified. This action cannot be undone.'
 
   return transitions((styles, show) =>
     show ? (
@@ -60,16 +93,10 @@ export default function StatusConfirmModal(props: Props) {
             transform: styles.scale.to((s) => `scale(${s})`),
           }}
         >
-          <h2 className="text-lg font-semibold mb-2">
-            {isDeposited ? 'Mark as Deposited?' : 'Mark Report as Printed?'}
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {isDeposited
-              ? 'Record the deposit details. This action cannot be undone.'
-              : 'This will mark the report as printed and recorded in the church system. Envelopes can no longer be modified. This action cannot be undone.'}
-          </p>
+          <h2 className="text-lg font-semibold mb-2">{title}</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{description}</p>
 
-          {isDeposited && (
+          {type === 'deposited' && (
             <div className="space-y-3 mb-6">
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -99,6 +126,22 @@ export default function StatusConfirmModal(props: Props) {
             </div>
           )}
 
+          {type === 'no_donations' && (
+            <div className="mb-6">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Reason
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="e.g. Ward conference, stake event, no meeting held..."
+                rows={2}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                autoFocus
+              />
+            </div>
+          )}
+
           <div className="flex gap-3 justify-end">
             <button
               onClick={onCancel}
@@ -111,7 +154,7 @@ export default function StatusConfirmModal(props: Props) {
               disabled={!canConfirm}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Confirm
+              {type === 'no_donations' ? 'Yes, No Donations' : 'Confirm'}
             </button>
           </div>
         </animated.div>

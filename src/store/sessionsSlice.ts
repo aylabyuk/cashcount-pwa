@@ -23,6 +23,7 @@ export interface CountingSession {
   depositedAt?: string       // ISO datetime
   depositedBy?: [string, string] // two depositor names
   noDonationsAt?: string         // ISO datetime
+  noDonationsReason?: string     // required reason/note
 }
 
 interface SessionsState {
@@ -142,11 +143,12 @@ const sessionsSlice = createSlice({
       session.depositedAt = new Date().toISOString()
       session.depositedBy = [action.payload.name1, action.payload.name2]
     },
-    markNoDonations(state, action: PayloadAction<string>) {
-      const session = state.sessions.find((s) => s.id === action.payload)
+    markNoDonations(state, action: PayloadAction<{ sessionId: string; reason: string }>) {
+      const session = state.sessions.find((s) => s.id === action.payload.sessionId)
       if (!session || session.status !== 'active') return
       session.status = 'no_donations'
       session.noDonationsAt = new Date().toISOString()
+      session.noDonationsReason = action.payload.reason
       session.envelopes = []
     },
     reactivateSession(state, action: PayloadAction<string>) {
@@ -154,6 +156,7 @@ const sessionsSlice = createSlice({
       if (!session || session.status !== 'no_donations') return
       session.status = 'active'
       session.noDonationsAt = undefined
+      session.noDonationsReason = undefined
     },
   },
 })

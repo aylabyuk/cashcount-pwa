@@ -27,6 +27,9 @@ export default function EnvelopeFormContent({ sessionId, envelopeId, onNotFound 
   }
 
   const locked = session.status !== 'active'
+  const envelopeDisplayNumber = [...session.envelopes]
+    .sort((a, b) => a.number - b.number)
+    .findIndex((e) => e.id === envelopeId) + 1
 
   function update(changes: Record<string, number>) {
     dispatch(updateEnvelope({ sessionId: session!.id, envelopeId: envelope!.id, changes }))
@@ -37,7 +40,7 @@ export default function EnvelopeFormContent({ sessionId, envelopeId, onNotFound 
 
   return (
     <div className="p-4 space-y-4">
-      <h2 className="text-lg font-semibold">Envelope #{envelope.number}</h2>
+      <h2 className="text-lg font-semibold">Envelope #{envelopeDisplayNumber}</h2>
 
       {/* Cash Bills */}
       <div>

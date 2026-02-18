@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Outlet, useLocation, useNavigate, matchPath } from 'react-router-dom'
 import { useSpring, animated } from '@react-spring/web'
-import { useMediaQuery } from '../../hooks/useMediaQuery'
-import { SPRING_MODAL, DESKTOP_BREAKPOINT } from '../../utils/constants'
+import { useAppSelector, useAppDispatch } from '../../store'
+import { navigateToDetail, navigateToList } from '../../store/viewSlice'
+import { SPRING_MODAL } from '../../utils/constants'
 import SessionsListContent from '../SessionsListContent'
 import SessionDetailContent from '../SessionDetailContent'
 import SettingsPanel from '../SettingsPanel'
@@ -10,9 +10,8 @@ import SettingsPanel from '../SettingsPanel'
 const PANEL_WIDTH = 360
 
 export default function MasterDetailLayout() {
-  const isDesktop = useMediaQuery(DESKTOP_BREAKPOINT)
-  const location = useLocation()
-  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const selectedSessionId = useAppSelector((s) => s.view.selectedSessionId)
   const [collapsed, setCollapsed] = useState(false)
 
   const springStyles = useSpring({
@@ -20,15 +19,6 @@ export default function MasterDetailLayout() {
     opacity: collapsed ? 0 : 1,
     config: SPRING_MODAL,
   })
-
-  // Mobile: render the matched route as a full page
-  if (!isDesktop) {
-    return <Outlet />
-  }
-
-  // Desktop: parse URL to determine right panel content
-  const sessionMatch = matchPath('/session/:id', location.pathname)
-  const selectedSessionId = sessionMatch?.params.id ?? null
 
   return (
     <div className="relative h-full">
@@ -39,8 +29,8 @@ export default function MasterDetailLayout() {
       >
         <div className="flex flex-col h-full" style={{ width: PANEL_WIDTH }}>
           <SessionsListContent
-            onSelectSession={(id) => navigate(`/session/${id}`)}
-            onSessionDeleted={() => navigate('/', { replace: true })}
+            onSelectSession={(id) => dispatch(navigateToDetail(id))}
+            onSessionDeleted={() => dispatch(navigateToList())}
             selectedSessionId={selectedSessionId}
             isPanel
           />
@@ -71,7 +61,7 @@ export default function MasterDetailLayout() {
             <SessionDetailContent
               key={selectedSessionId}
               sessionId={selectedSessionId}
-              onNotFound={() => navigate('/', { replace: true })}
+              onNotFound={() => dispatch(navigateToList())}
               isPanel
             />
           </div>

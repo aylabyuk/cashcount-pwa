@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import sessionsReducer, { type CountingSession } from './sessionsSlice'
 import settingsReducer from './settingsSlice'
+import viewReducer from './viewSlice'
 
 const STORAGE_KEY = 'cashcount_sessions'
 const SETTINGS_KEY = 'cashcount_settings'
@@ -39,9 +40,10 @@ export const store = configureStore({
   reducer: {
     sessions: sessionsReducer,
     settings: settingsReducer,
+    view: viewReducer,
   },
   preloadedState: {
-    ...(loadSessions() ? { sessions: loadSessions()! } : {}),
+    sessions: loadSessions() ?? { sessions: [] },
     settings: loadSettings() ?? { theme: 'system' as const },
   },
 })

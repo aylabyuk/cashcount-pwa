@@ -64,7 +64,7 @@ export default function SessionsListContent({
       </div>
 
       {!isPanel && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
           <div className="max-w-2xl mx-auto">
             <button
               onClick={list.handleAddSession}

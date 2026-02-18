@@ -19,7 +19,9 @@ export default function SessionsListContent({
   selectedSessionId,
   isPanel,
 }: Props) {
-  const sessions = useAppSelector((s) => s.sessions.sessions)
+  const sessions = useAppSelector((s) =>
+    [...s.sessions.sessions].sort((a, b) => b.date.localeCompare(a.date))
+  )
   const dispatch = useAppDispatch()
 
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)

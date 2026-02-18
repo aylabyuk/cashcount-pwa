@@ -7,6 +7,7 @@ import { updateEnvelope, type Envelope } from '../store/sessionsSlice'
 import DenominationRow from './DenominationRow'
 import CurrencyField from './CurrencyField'
 import { formatCurrency } from '../utils/currency'
+import ConfirmDialog from './ConfirmDialog'
 
 interface AddProps {
   mode: 'add'
@@ -46,6 +47,8 @@ export default function EnvelopeModal(props: Props) {
   const [count5, setCount5] = useState(0)
   const [coinsAmount, setCoinsAmount] = useState(0)
   const [chequeAmount, setChequeAmount] = useState(0)
+  const [adding, setAdding] = useState(false)
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
 
   const isDesktop = useMediaQuery('(min-width: 640px)')
 
@@ -93,14 +96,28 @@ export default function EnvelopeModal(props: Props) {
   }
 
   function handleClose() {
+    if (mode === 'add' && totalCents > 0) {
+      setShowDiscardConfirm(true)
+      return
+    }
     if (mode === 'add') resetFields()
+    setAdding(false)
+    onClose()
+  }
+
+  function handleConfirmDiscard() {
+    setShowDiscardConfirm(false)
+    resetFields()
+    setAdding(false)
     onClose()
   }
 
   function handleAdd() {
-    if (mode !== 'add') return
+    if (mode !== 'add' || adding) return
+    setAdding(true)
     props.onAdd({ count100, count50, count20, count10, count5, coinsAmount, chequeAmount })
     resetFields()
+    setAdding(false)
   }
 
   function dispatchUpdate(changes: Record<string, number>) {
@@ -128,10 +145,10 @@ export default function EnvelopeModal(props: Props) {
 
   useModalKeys(open, {
     onClose: handleClose,
-    onConfirm: mode === 'add' && totalCents > 0 ? handleAdd : undefined,
+    onConfirm: mode === 'add' && totalCents > 0 && !adding ? handleAdd : undefined,
   })
 
-  return transitions((styles, show) =>
+  const rendered = transitions((styles, show) =>
     show ? (
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
         <animated.div
@@ -156,7 +173,7 @@ export default function EnvelopeModal(props: Props) {
             {mode === 'add' ? (
               <button
                 onClick={handleAdd}
-                disabled={totalCents === 0}
+                disabled={totalCents === 0 || adding}
                 className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 disabled:opacity-30 disabled:pointer-events-none"
               >
                 Add
@@ -221,5 +238,19 @@ export default function EnvelopeModal(props: Props) {
         </animated.div>
       </div>
     ) : null
+  )
+
+  return (
+    <>
+      {rendered}
+      <ConfirmDialog
+        open={showDiscardConfirm}
+        title="Discard Envelope?"
+        message="You have unsaved data. Are you sure you want to discard this envelope?"
+        confirmLabel="Discard"
+        onConfirm={handleConfirmDiscard}
+        onCancel={() => setShowDiscardConfirm(false)}
+      />
+    </>
   )
 }

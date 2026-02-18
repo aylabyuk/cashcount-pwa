@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { type CountingSession, getSessionTotals } from '../store/sessionsSlice'
 import { formatCurrency } from '../utils/currency'
 
@@ -18,41 +19,95 @@ export default function TotalsSummary({ session }: Props) {
     5: totals.total5,
   }
 
+  const chequeLines = useMemo(() => {
+    const lines: { envelopeNum: number; amount: number }[] = []
+    const sorted = [...session.envelopes].sort((a, b) => a.number - b.number)
+    sorted.forEach((e, i) => {
+      if (e.chequeAmount > 0) {
+        lines.push({ envelopeNum: i + 1, amount: e.chequeAmount })
+      }
+    })
+    return lines
+  }, [session.envelopes])
+
   return (
     <div className="space-y-3">
-      {/* Cash Section */}
+      {/* Cash Bills */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Cash</h3>
+          <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Bills</h3>
         </div>
-        <div className="px-4 divide-y divide-gray-100 dark:divide-gray-700">
-          {DENOMINATIONS.map((d) => (
-            <div key={d} className="flex justify-between py-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <span>${d} x {denomCounts[d]}</span>
-              <span className="font-mono">{formatCurrency(denomCounts[d] * d * 100)}</span>
-            </div>
-          ))}
-          <div className="flex justify-between py-2 text-sm font-medium">
-            <span>Cash Subtotal</span>
-            <span className="font-mono">{formatCurrency(totals.totalCash)}</span>
-          </div>
+        <div className="px-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[11px] text-gray-400 dark:text-gray-500 uppercase">
+                <th className="text-left font-medium py-1.5">Denom</th>
+                <th className="text-center font-medium py-1.5">Count</th>
+                <th className="text-right font-medium py-1.5">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600 dark:text-gray-300">
+              {DENOMINATIONS.map((d) => {
+                const count = denomCounts[d]
+                const dimmed = count === 0
+                return (
+                  <tr key={d} className={`border-t border-gray-100 dark:border-gray-700 ${dimmed ? 'text-gray-300 dark:text-gray-600' : ''}`}>
+                    <td className="py-1.5 font-mono">${d}</td>
+                    <td className="py-1.5 text-center font-mono">{count}</td>
+                    <td className="py-1.5 text-right font-mono">{formatCurrency(count * d * 100)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-gray-200 dark:border-gray-600 font-medium">
+                <td className="py-2" colSpan={2}>Cash Subtotal</td>
+                <td className="py-2 text-right font-mono">{formatCurrency(totals.totalCash)}</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
 
-      {/* Coins & Cheques Section */}
+      {/* Coins */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Coins & Cheques</h3>
+          <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Coins</h3>
         </div>
-        <div className="px-4 divide-y divide-gray-100 dark:divide-gray-700">
-          <div className="flex justify-between py-1.5 text-sm">
-            <span>Coins</span>
-            <span className="font-mono">{formatCurrency(totals.totalCoins)}</span>
-          </div>
-          <div className="flex justify-between py-1.5 text-sm">
-            <span>Cheques</span>
-            <span className="font-mono">{formatCurrency(totals.totalCheques)}</span>
-          </div>
+        <div className="px-4 py-2 flex justify-between text-sm font-medium">
+          <span>Coins Total</span>
+          <span className="font-mono">{formatCurrency(totals.totalCoins)}</span>
+        </div>
+      </div>
+
+      {/* Cheques */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Cheques</h3>
+        </div>
+        <div className="px-4">
+          {chequeLines.length === 0 ? (
+            <div className="py-2 text-sm text-gray-400 dark:text-gray-500">No cheques</div>
+          ) : (
+            <table className="w-full text-sm">
+              <tbody className="text-gray-600 dark:text-gray-300">
+                {chequeLines.map((line, i) => (
+                  <tr key={i} className={i > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}>
+                    <td className="py-1.5 text-gray-400 dark:text-gray-500">Env #{line.envelopeNum}</td>
+                    <td className="py-1.5 text-right font-mono">{formatCurrency(line.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {chequeLines.length > 1 && (
+                <tfoot>
+                  <tr className="border-t border-gray-200 dark:border-gray-600 font-medium">
+                    <td className="py-2">Cheques Subtotal</td>
+                    <td className="py-2 text-right font-mono">{formatCurrency(totals.totalCheques)}</td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          )}
         </div>
       </div>
 

@@ -24,15 +24,17 @@ export default function Toast({ open, message, duration = 4000, onClose }: Props
 
   return transitions((styles, show) =>
     show ? (
-      <animated.div
-        className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg"
-        style={{
-          opacity: styles.opacity,
-          transform: styles.y.to((y) => `translateX(-50%) translateY(${y}px)`),
-        }}
-      >
-        {message}
-      </animated.div>
+      <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <animated.div
+          className="bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg pointer-events-auto"
+          style={{
+            opacity: styles.opacity,
+            transform: styles.y.to((y) => `translateY(${y}px)`),
+          }}
+        >
+          {message}
+        </animated.div>
+      </div>
     ) : null
   )
 }

@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useTransition, animated } from '@react-spring/web'
 import { useAppSelector, useAppDispatch } from '../store'
 import {
   addEnvelope,
@@ -82,7 +83,30 @@ export default function SessionDetailContent({
   const editable = status === 'active'
   const badge = STATUS_BADGE[status]
   const canReactivate = status === 'no_donations' && session.date === getCurrentSunday()
-  const sortedEnvelopes = [...session.envelopes].sort((a, b) => a.number - b.number)
+  const sortedEnvelopes = useMemo(
+    () => [...session.envelopes].sort((a, b) => a.number - b.number),
+    [session.envelopes]
+  )
+
+  const initialRef = useRef(true)
+  useEffect(() => {
+    initialRef.current = false
+  }, [])
+
+  const envelopeTransitions = useTransition(sortedEnvelopes, {
+    keys: (e) => e.id,
+    from: initialRef.current
+      ? { opacity: 1, transform: 'scale(1)' }
+      : { opacity: 0, transform: 'scale(0.9)' },
+    enter: initialRef.current
+      ? { opacity: 1, transform: 'scale(1)' }
+      : () => async (next) => {
+          await new Promise((r) => setTimeout(r, 150))
+          await next({ opacity: 1, transform: 'scale(1)' })
+        },
+    leave: { opacity: 0, transform: 'scale(0.9)' },
+    config: { tension: 300, friction: 24 },
+  })
 
   function handleAddEnvelope(envelope: {
     count100: number
@@ -130,7 +154,7 @@ export default function SessionDetailContent({
 
   return (
     <div className={isPanel ? 'h-full overflow-y-auto' : ''}>
-      <div className={isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'}>
+      <div className={`${isPanel ? 'p-4 space-y-4' : 'p-4 pb-0 space-y-4'} ${status === 'no_donations' ? 'flex flex-col h-full' : ''}`}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
@@ -218,29 +242,50 @@ export default function SessionDetailContent({
           </div>
         )}
 
-        {/* No donations info */}
-        {status === 'no_donations' && session.noDonationsAt && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2">
-            Marked as no donations {new Date(session.noDonationsAt).toLocaleString()}
+        {/* No donations view */}
+        {status === 'no_donations' ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12H4m16 0l-4-4m4 4l-4 4" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">No Donations Received</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 max-w-55">
+              This Sunday was marked as having no donations to count.
+            </p>
+            {session.noDonationsAt && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                {new Date(session.noDonationsAt).toLocaleString()}
+              </p>
+            )}
+            {canReactivate && (
+              <button
+                onClick={handleReactivate}
+                className="mt-6 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              >
+                Reactivate Session
+              </button>
+            )}
           </div>
-        )}
+        ) : (
+          <>
+            {/* Totals Summary */}
+            <TotalsSummary session={session} />
 
-        {/* Totals Summary */}
-        <TotalsSummary session={session} />
-
-        {/* Envelopes */}
-        <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2 mt-10!">Envelopes</h3>
-        {sortedEnvelopes.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-            No envelopes yet.
-          </div>
-        ) : isPanel ? (
+            {/* Envelopes */}
+            <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2 mt-10!">Envelopes</h3>
+            {sortedEnvelopes.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
+                No envelopes yet.
+              </div>
+            ) : isPanel ? (
           <div className="grid grid-cols-5 gap-2">
-            {sortedEnvelopes.map((envelope) => {
+            {envelopeTransitions((style, envelope) => {
               const cashTotal = getEnvelopeCashTotal(envelope)
               return (
-                <div
-                  key={envelope.id}
+                <animated.div
+                  style={style}
                   className="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-black/2 dark:hover:bg-white/2 group"
                 >
                   <button
@@ -281,17 +326,17 @@ export default function SessionDetailContent({
                       </svg>
                     </button>
                   )}
-                </div>
+                </animated.div>
               )
             })}
           </div>
         ) : (
           <div className="space-y-1">
-            {sortedEnvelopes.map((envelope) => {
+            {envelopeTransitions((style, envelope) => {
               const cashTotal = getEnvelopeCashTotal(envelope)
               return (
-                <div
-                  key={envelope.id}
+                <animated.div
+                  style={style}
                   className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center"
                 >
                   <button
@@ -320,10 +365,12 @@ export default function SessionDetailContent({
                       </svg>
                     </button>
                   )}
-                </div>
+                </animated.div>
               )
             })}
           </div>
+            )}
+          </>
         )}
         <div className="h-40" />
       </div>

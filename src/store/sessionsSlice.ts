@@ -158,6 +158,12 @@ const sessionsSlice = createSlice({
       session.noDonationsAt = undefined
       session.noDonationsReason = undefined
     },
+    purgeOldSessions(state) {
+      const cutoff = new Date()
+      cutoff.setMonth(cutoff.getMonth() - 6)
+      const cutoffStr = cutoff.toISOString().slice(0, 10)
+      state.sessions = state.sessions.filter((s) => s.date >= cutoffStr)
+    },
   },
 })
 
@@ -171,6 +177,7 @@ export const {
   markDeposited,
   markNoDonations,
   reactivateSession,
+  purgeOldSessions,
 } = sessionsSlice.actions
 
 export default sessionsSlice.reducer

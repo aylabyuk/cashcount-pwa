@@ -25,7 +25,6 @@ export default function SessionsListContent({
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false)
   const [visibleCount, setVisibleCount] = useState(5)
-
   function handleAddSession() {
     const sunday = getCurrentSunday()
     const exists = sessions.some((s) => s.date === sunday)
@@ -119,9 +118,12 @@ export default function SessionsListContent({
                 onClick={() => setVisibleCount((c) => c + 5)}
                 className="w-full py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
-                Load More ({sessions.length - visibleCount} remaining)
+                Load More
               </button>
             )}
+            <p className="text-center text-xs text-gray-400 dark:text-gray-500 pt-3">
+              Sessions older than 6 months are automatically removed.
+            </p>
           </div>
         )}
       </div>

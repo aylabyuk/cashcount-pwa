@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import sessionsReducer, { type CountingSession } from './sessionsSlice'
 import settingsReducer from './settingsSlice'
-import mockData from '../data/mockSessions.json'
 
 const STORAGE_KEY = 'cashcount_sessions'
 const SETTINGS_KEY = 'cashcount_settings'
@@ -42,7 +41,7 @@ export const store = configureStore({
     settings: settingsReducer,
   },
   preloadedState: {
-    sessions: loadSessions() ?? migrateSessions(mockData),
+    ...(loadSessions() ? { sessions: loadSessions()! } : {}),
     settings: loadSettings() ?? { theme: 'system' as const },
   },
 })

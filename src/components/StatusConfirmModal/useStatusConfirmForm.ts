@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useAppSelector } from '../../store'
 
 type Type = 'report_printed' | 'deposited' | 'no_donations'
 
@@ -12,17 +13,18 @@ interface Options {
 
 export function useStatusConfirmForm(options: Options) {
   const { type } = options
+  const userName = useAppSelector((s) => s.auth.user?.displayName ?? '')
   const [batchNumber, setBatchNumber] = useState('')
-  const [name1, setName1] = useState('')
+  const [name1, setName1] = useState(type === 'deposited' ? userName : '')
   const [name2, setName2] = useState('')
   const [reason, setReason] = useState('')
 
   const resetFields = useCallback(() => {
     setBatchNumber('')
-    setName1('')
+    setName1(userName)
     setName2('')
     setReason('')
-  }, [])
+  }, [userName])
 
   const handleConfirm = useCallback(() => {
     if (type === 'report_printed') {

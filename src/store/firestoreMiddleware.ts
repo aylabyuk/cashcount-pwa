@@ -24,12 +24,15 @@ const SESSION_ACTIONS = new Set([
   'sessions/purgeOldSessions',
 ])
 
-function sessionToFirestore(session: CountingSession) {
+function sessionToFirestore(session: CountingSession, userEmail: string) {
   return {
     date: session.date,
     status: session.status,
     envelopes: session.envelopes,
+    createdBy: session.createdBy ?? null,
+    lastUpdatedBy: userEmail,
     reportPrintedAt: session.reportPrintedAt ?? null,
+    reportPrintedBy: session.reportPrintedBy ?? null,
     batchNumber: session.batchNumber ?? null,
     depositedAt: session.depositedAt ?? null,
     depositedBy: session.depositedBy ?? null,
@@ -68,8 +71,10 @@ export const firestoreMiddleware: Middleware = (storeAPI) => (next) => (action: 
     return next(action)
   }
 
+  const userEmail = state.auth.user?.email?.toLowerCase() ?? 'unknown'
+
   // Write to Firestore; suppress Redux reducer (onSnapshot will update state)
-  handleFirestoreWrite(type, payload, state, unitId).catch((error) => {
+  handleFirestoreWrite(type, payload, state, unitId, userEmail).catch((error) => {
     console.error(`Firestore write failed for ${type}:`, error)
   })
 }
@@ -79,6 +84,7 @@ async function handleFirestoreWrite(
   payload: unknown,
   state: RootState,
   unitId: string,
+  userEmail: string,
 ) {
   const sessions = state.sessions.sessions
   const p = payload as Record<string, unknown>
@@ -91,10 +97,11 @@ async function handleFirestoreWrite(
         date: p.date as string,
         envelopes: [],
         status: 'active',
+        createdBy: userEmail,
       }
       await setDoc(
         doc(collection(db, 'units', unitId, 'sessions'), newId),
-        { ...sessionToFirestore(newSession), createdAt: serverTimestamp() }
+        { ...sessionToFirestore(newSession, userEmail), createdBy: userEmail, createdAt: serverTimestamp() }
       )
       break
     }
@@ -113,14 +120,14 @@ async function handleFirestoreWrite(
       const session = sessions.find((s) => s.id === sessionId)
       if (!session) return
       const maxNum = session.envelopes.reduce((max, e) => Math.max(max, e.number), 0)
-      const newEnvelope = { ...createEnvelope(maxNum + 1), ...partialEnvelope }
+      const newEnvelope = { ...createEnvelope(maxNum + 1), ...partialEnvelope, lastUpdatedBy: userEmail }
       const updatedSession = {
         ...session,
         envelopes: [...session.envelopes, newEnvelope],
       }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break
@@ -135,12 +142,12 @@ async function handleFirestoreWrite(
       const session = sessions.find((s) => s.id === sessionId)
       if (!session) return
       const updatedEnvelopes = session.envelopes.map((e) =>
-        e.id === envelopeId ? { ...e, ...changes } : e
+        e.id === envelopeId ? { ...e, ...changes, lastUpdatedBy: userEmail } : e
       )
       const updatedSession = { ...session, envelopes: updatedEnvelopes }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break
@@ -154,7 +161,7 @@ async function handleFirestoreWrite(
       const updatedSession = { ...session, envelopes: updatedEnvelopes }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break
@@ -168,11 +175,12 @@ async function handleFirestoreWrite(
         ...session,
         status: 'report_printed',
         reportPrintedAt: new Date().toISOString(),
+        reportPrintedBy: userEmail,
         batchNumber,
       }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break
@@ -190,7 +198,7 @@ async function handleFirestoreWrite(
       }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break
@@ -209,7 +217,7 @@ async function handleFirestoreWrite(
       }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break
@@ -227,7 +235,7 @@ async function handleFirestoreWrite(
       }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),
-        sessionToFirestore(updatedSession),
+        sessionToFirestore(updatedSession, userEmail),
         { merge: true }
       )
       break

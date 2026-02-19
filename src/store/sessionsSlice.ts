@@ -11,6 +11,7 @@ export interface Envelope {
   count5: number
   coinsAmount: number // cents
   chequeAmount: number // cents
+  lastUpdatedBy?: string // email
 }
 
 export type SessionStatus = 'active' | 'report_printed' | 'deposited' | 'no_donations'
@@ -20,7 +21,10 @@ export interface CountingSession {
   date: string // YYYY-MM-DD, always a Sunday
   envelopes: Envelope[]
   status: SessionStatus
+  createdBy?: string           // email
+  lastUpdatedBy?: string       // email
   reportPrintedAt?: string   // ISO datetime
+  reportPrintedBy?: string   // email
   batchNumber?: string       // required when marking report printed
   depositedAt?: string       // ISO datetime
   depositedBy?: [string, string] // two depositor names

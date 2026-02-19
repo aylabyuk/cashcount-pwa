@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signInWithPopup, signInWithRedirect } from 'firebase/auth'
+import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../../firebase'
 import { useAppSelector } from '../../store'
 import appIcon from '../../assets/icon.png'
@@ -11,12 +11,7 @@ export default function SignInScreen() {
   async function handleSignIn() {
     setSigningIn(true)
     try {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      if (isStandalone) {
-        await signInWithRedirect(auth, googleProvider)
-      } else {
-        await signInWithPopup(auth, googleProvider)
-      }
+      await signInWithPopup(auth, googleProvider)
     } catch (err) {
       console.error('Sign-in error:', err)
       setSigningIn(false)

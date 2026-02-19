@@ -27,9 +27,9 @@ export default function BillsTable({ denomCounts, cashSubtotal }: Props) {
               const dimmed = count === 0
               return (
                 <tr key={d} className={`border-t border-gray-100 dark:border-gray-700 ${dimmed ? 'text-gray-300 dark:text-gray-600' : ''}`}>
-                  <td className="py-1.5 font-mono">${d}</td>
-                  <td className="py-1.5 text-center font-mono">{count}</td>
-                  <td className="py-1.5 text-right font-mono">{formatCurrency(count * d * 100)}</td>
+                  <td className="py-1.5">${d}</td>
+                  <td className="py-1.5 text-center">{count}</td>
+                  <td className="py-1.5 text-right">{formatCurrency(count * d * 100)}</td>
                 </tr>
               )
             })}
@@ -37,7 +37,7 @@ export default function BillsTable({ denomCounts, cashSubtotal }: Props) {
           <tfoot>
             <tr className="border-t border-gray-200 dark:border-gray-600 font-medium">
               <td className="py-2" colSpan={2}>Cash Subtotal</td>
-              <td className="py-2 text-right font-mono">{formatCurrency(cashSubtotal)}</td>
+              <td className="py-2 text-right">{formatCurrency(cashSubtotal)}</td>
             </tr>
           </tfoot>
         </table>

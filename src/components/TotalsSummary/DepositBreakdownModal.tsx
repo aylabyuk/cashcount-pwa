@@ -69,39 +69,39 @@ export default function DepositBreakdownModal({
                   if (count === 0) return null
                   return (
                     <div key={d} className="flex items-baseline gap-3">
-                      <div className="text-2xl font-mono whitespace-nowrap">
+                      <div className="text-2xl whitespace-nowrap">
                         <span className="text-gray-400 dark:text-gray-500 inline-block w-[4ch] text-right">${d}</span>
                         <span className="text-gray-400 dark:text-gray-500"> × </span>
                         <span className="font-semibold">{count}</span>
                       </div>
                       <div className="flex-1 border-b-2 border-dashed border-gray-300 dark:border-gray-600 translate-y-[-0.35em]" />
-                      <span className="text-2xl font-mono font-semibold whitespace-nowrap">{formatCurrency(count * d * 100)}</span>
+                      <span className="text-2xl font-semibold whitespace-nowrap">{formatCurrency(count * d * 100)}</span>
                     </div>
                   )
                 })}
               </div>
               <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-baseline">
                 <span className="text-lg font-semibold text-gray-500 dark:text-gray-400">Cash Total</span>
-                <span className="text-2xl font-mono font-bold">{formatCurrency(cashSubtotal)}</span>
+                <span className="text-2xl font-bold">{formatCurrency(cashSubtotal)}</span>
               </div>
             </div>
 
             {/* Coins */}
             <div className="flex justify-between items-baseline pt-2">
               <span className="text-lg font-semibold text-gray-500 dark:text-gray-400">Coins</span>
-              <span className="text-2xl font-mono font-bold">{formatCurrency(coinsTotal)}</span>
+              <span className="text-2xl font-bold">{formatCurrency(coinsTotal)}</span>
             </div>
 
             {/* Cheques */}
             <div className="flex justify-between items-baseline">
               <span className="text-lg font-semibold text-gray-500 dark:text-gray-400">Cheques</span>
-              <span className="text-2xl font-mono font-bold">{formatCurrency(chequesTotal)}</span>
+              <span className="text-2xl font-bold">{formatCurrency(chequesTotal)}</span>
             </div>
 
             {/* Grand Total */}
             <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-600 flex justify-between items-baseline">
               <span className="text-xl font-bold">Grand Total</span>
-              <span className="text-3xl font-mono font-bold">{formatCurrency(grandTotal)}</span>
+              <span className="text-3xl font-bold">{formatCurrency(grandTotal)}</span>
             </div>
           </div>
 

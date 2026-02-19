@@ -20,7 +20,7 @@ export default function ChequesTable({ chequeLines, chequesSubtotal }: Props) {
               {chequeLines.map((line, i) => (
                 <tr key={i} className={i > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''}>
                   <td className="py-1.5 text-gray-400 dark:text-gray-500">Env #{line.envelopeNum}</td>
-                  <td className="py-1.5 text-right font-mono">{formatCurrency(line.amount)}</td>
+                  <td className="py-1.5 text-right">{formatCurrency(line.amount)}</td>
                 </tr>
               ))}
             </tbody>
@@ -28,7 +28,7 @@ export default function ChequesTable({ chequeLines, chequesSubtotal }: Props) {
               <tfoot>
                 <tr className="border-t border-gray-200 dark:border-gray-600 font-medium">
                   <td className="py-2">Cheques Subtotal</td>
-                  <td className="py-2 text-right font-mono">{formatCurrency(chequesSubtotal)}</td>
+                  <td className="py-2 text-right">{formatCurrency(chequesSubtotal)}</td>
                 </tr>
               </tfoot>
             )}

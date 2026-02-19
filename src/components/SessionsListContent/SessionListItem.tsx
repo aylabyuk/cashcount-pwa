@@ -45,7 +45,7 @@ export default function SessionListItem({ session, isSelected, onSelect }: Props
             {session.envelopes.length} envelope(s)
           </span>
         </div>
-        <span className="text-lg font-semibold font-mono">
+        <span className="text-lg font-semibold">
           {formatCurrency(totals.grandTotal)}
         </span>
       </div>

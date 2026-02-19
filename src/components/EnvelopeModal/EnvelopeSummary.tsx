@@ -14,19 +14,19 @@ export default function EnvelopeSummary({ cashTotal, coinsAmount, chequeAmount, 
       <div className="bg-gray-50 dark:bg-gray-900 rounded-lg px-3 divide-y divide-gray-200 dark:divide-gray-700">
         <div className="flex justify-between py-2 text-sm">
           <span>Cash</span>
-          <span className="font-mono">{formatCurrency(cashTotal)}</span>
+          <span>{formatCurrency(cashTotal)}</span>
         </div>
         <div className="flex justify-between py-2 text-sm">
           <span>Coins</span>
-          <span className="font-mono">{formatCurrency(coinsAmount)}</span>
+          <span>{formatCurrency(coinsAmount)}</span>
         </div>
         <div className="flex justify-between py-2 text-sm">
           <span>Cheque</span>
-          <span className="font-mono">{formatCurrency(chequeAmount)}</span>
+          <span>{formatCurrency(chequeAmount)}</span>
         </div>
         <div className="flex justify-between py-3 font-bold">
           <span>Envelope Total</span>
-          <span className="text-lg font-mono">{formatCurrency(total)}</span>
+          <span className="text-lg">{formatCurrency(total)}</span>
         </div>
       </div>
     </div>

@@ -71,10 +71,10 @@ export default function EnvelopeCards({
                       <span className="text-xs font-medium text-gray-500 dark:text-gray-400">#{displayIndex.get(envelope.id)}</span>
                       {editable && <div className="w-5" />}
                     </div>
-                    <span className="text-sm font-bold font-mono text-center block mt-1 mb-2">
+                    <span className="text-sm font-bold text-center block mt-1 mb-2">
                       {formatCurrency(getEnvelopeTotal(envelope))}
                     </span>
-                    <div className="space-y-0.5 text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                    <div className="space-y-0.5 text-[11px] text-gray-400 dark:text-gray-500">
                       <div className="flex justify-between"><span>Cash</span><span>{formatCurrency(cashTotal)}</span></div>
                       <div className="flex justify-between"><span>Coins</span><span>{formatCurrency(envelope.coinsAmount)}</span></div>
                       <div className="flex justify-between"><span>Cheque</span><span>{formatCurrency(envelope.chequeAmount)}</span></div>
@@ -129,11 +129,11 @@ export default function EnvelopeCards({
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">Envelope #{displayIndex.get(envelope.id)}</span>
-                  <span className="text-sm font-bold font-mono">
+                  <span className="text-sm font-bold">
                     {formatCurrency(getEnvelopeTotal(envelope))}
                   </span>
                 </div>
-                <div className="flex gap-3 text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                <div className="flex gap-3 text-[11px] text-gray-400 dark:text-gray-500">
                   <span>Cash {formatCurrency(cashTotal)}</span>
                   <span>Coins {formatCurrency(envelope.coinsAmount)}</span>
                   <span>Cheque {formatCurrency(envelope.chequeAmount)}</span>

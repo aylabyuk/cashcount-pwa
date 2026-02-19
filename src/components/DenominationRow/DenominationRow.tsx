@@ -20,7 +20,7 @@ export default function DenominationRow({ denomination, count, onChange, disable
       >
         &minus;
       </button>
-      <span className="w-10 text-center font-mono text-base">{count}</span>
+      <span className="w-10 text-center text-base">{count}</span>
       <button
         onClick={() => onChange(count + 1)}
         disabled={disabled}
@@ -28,7 +28,7 @@ export default function DenominationRow({ denomination, count, onChange, disable
       >
         +
       </button>
-      <span className="ml-auto text-sm text-gray-500 dark:text-gray-400 font-mono">
+      <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">
         {formatCurrency(subtotalCents)}
       </span>
     </div>

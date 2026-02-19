@@ -12,7 +12,7 @@ export default function CoinsCard({ total }: Props) {
       </div>
       <div className="px-4 py-2 flex justify-between text-sm font-medium">
         <span>Coins Total</span>
-        <span className="font-mono">{formatCurrency(total)}</span>
+        <span>{formatCurrency(total)}</span>
       </div>
     </div>
   )

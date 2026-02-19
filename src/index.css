@@ -1,11 +1,17 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
 
 html,
 body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Prevent text selection on mobile, allow on desktop */

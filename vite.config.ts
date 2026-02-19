@@ -19,6 +19,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icons/*.png', 'apple-touch-icon.png'],
+      workbox: {
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/firebase-cloud-messaging-push-scope/],
+      },
       manifest: {
         name: 'CashCount',
         short_name: 'CashCount',

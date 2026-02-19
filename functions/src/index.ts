@@ -7,45 +7,133 @@ initializeApp()
 
 const db = getFirestore()
 
+interface NotificationConfig {
+  title: string
+  body: (actorName: string, sessionDate: string) => string
+  getTargetEmails: (depositInfo: Record<string, string>, initiatedBy: string, actorEmail: string) => Set<string>
+}
+
+const STATUS_NOTIFICATIONS: Record<string, NotificationConfig> = {
+  pending_deposit: {
+    title: 'Deposit Verification Needed',
+    body: (actor, date) => `${actor} initiated a deposit for the ${date} session`,
+    getTargetEmails: (depositInfo, _initiatedBy, actorEmail) => {
+      // Notify P2 (depositor2) + admins, exclude initiator
+      const emails = new Set<string>()
+      emails.add(depositInfo.depositor2)
+      emails.delete(actorEmail)
+      return emails
+    },
+  },
+  deposited: {
+    title: 'Deposit Verified',
+    body: (actor, date) => `${actor} verified the deposit for the ${date} session`,
+    getTargetEmails: (depositInfo, _initiatedBy, actorEmail) => {
+      // Notify both depositors + admins, exclude verifier
+      const emails = new Set<string>()
+      emails.add(depositInfo.depositor1)
+      emails.add(depositInfo.depositor2)
+      emails.delete(actorEmail)
+      return emails
+    },
+  },
+  recorded: {
+    title: 'Deposit Rejected',
+    body: (actor, date) => `${actor} rejected the deposit for the ${date} session`,
+    getTargetEmails: (depositInfo, initiatedBy, actorEmail) => {
+      // Notify the person who initiated the deposit + admins, exclude rejector
+      const emails = new Set<string>()
+      emails.add(initiatedBy)
+      emails.add(depositInfo.depositor1)
+      emails.add(depositInfo.depositor2)
+      emails.delete(actorEmail)
+      return emails
+    },
+  },
+}
+
 /**
- * When a session status changes to 'pending_deposit', send push notifications
- * to P2 (depositor2) and all unit admins so they can verify or reject the deposit.
+ * Send push notifications on deposit-related status changes:
+ * - pending_deposit: notify P2 + admins to verify
+ * - deposited: notify depositors that it was verified
+ * - recorded (from pending_deposit): notify initiator that it was rejected
  */
-export const onDepositInitiated = onDocumentUpdated(
+export const onDepositStatusChange = onDocumentUpdated(
   'units/{unitId}/sessions/{sessionId}',
   async (event) => {
     const before = event.data?.before.data()
     const after = event.data?.after.data()
     if (!before || !after) return
 
-    // Only trigger when status transitions to pending_deposit
-    if (before.status === 'pending_deposit' || after.status !== 'pending_deposit') return
+    const beforeStatus = before.status as string
+    const afterStatus = after.status as string
+    console.log(`Status change: ${beforeStatus} -> ${afterStatus}`)
+
+    // Only handle deposit-related transitions
+    const isDepositInitiated = beforeStatus !== 'pending_deposit' && afterStatus === 'pending_deposit'
+    const isDepositVerified = beforeStatus === 'pending_deposit' && afterStatus === 'deposited'
+    const isDepositRejected = beforeStatus === 'pending_deposit' && afterStatus === 'recorded'
+
+    if (!isDepositInitiated && !isDepositVerified && !isDepositRejected) {
+      console.log('Not a deposit-related transition, skipping')
+      return
+    }
+
+    // For verified/rejected, use the before data's depositInfo (it may be cleared on reject)
+    const depositInfo = afterStatus === 'recorded'
+      ? before.depositInfo
+      : after.depositInfo
+    if (!depositInfo) {
+      console.log('No depositInfo found')
+      return
+    }
+
+    console.log('depositInfo:', JSON.stringify(depositInfo))
+
+    const config = STATUS_NOTIFICATIONS[afterStatus]
+    if (!config) return
 
     const unitId = event.params.unitId
     const sessionId = event.params.sessionId
-    const depositInfo = after.depositInfo
-    if (!depositInfo) return
 
-    // Collect emails that should be notified: P2 + all admins
-    const notifyEmails = new Set<string>()
-    notifyEmails.add(depositInfo.depositor2)
+    // Determine who performed the action
+    let actorEmail: string
+    if (isDepositInitiated) {
+      actorEmail = depositInfo.initiatedBy
+    } else if (isDepositVerified) {
+      actorEmail = after.depositInfo?.verifiedBy || ''
+    } else {
+      // Rejected — use lastUpdatedBy from the Firestore doc
+      actorEmail = (after.lastUpdatedBy as string) || ''
+    }
 
-    // Find all admins in the unit
+    // Build target email list from config
+    const notifyEmails = config.getTargetEmails(depositInfo, depositInfo.initiatedBy, actorEmail)
+
+    // Also add all unit admins
     const membersSnap = await db.collection(`units/${unitId}/members`).get()
     for (const memberDoc of membersSnap.docs) {
       const data = memberDoc.data()
       if (data.role === 'admin' && data.status === 'active') {
-        notifyEmails.add(memberDoc.id) // doc ID is email
+        notifyEmails.add(memberDoc.id)
       }
     }
 
-    // Don't notify the person who initiated the deposit
-    notifyEmails.delete(depositInfo.initiatedBy)
+    // Don't notify the actor
+    if (actorEmail) {
+      notifyEmails.delete(actorEmail)
+    }
 
-    if (notifyEmails.size === 0) return
+    console.log('Emails to notify:', [...notifyEmails])
 
-    // Get FCM tokens for all target users
+    if (notifyEmails.size === 0) {
+      console.log('No one to notify')
+      return
+    }
+
+    // Get FCM tokens for target users
     const tokensSnap = await db.collection(`units/${unitId}/fcmTokens`).get()
+    console.log(`Found ${tokensSnap.size} FCM tokens in unit`)
     const tokens: string[] = []
     for (const tokenDoc of tokensSnap.docs) {
       const data = tokenDoc.data()
@@ -54,28 +142,35 @@ export const onDepositInitiated = onDocumentUpdated(
       }
     }
 
-    if (tokens.length === 0) return
-
-    // Look up initiator name for notification text
-    let initiatorName = depositInfo.initiatedBy
-    const initiatorDoc = await db.doc(`units/${unitId}/members/${depositInfo.initiatedBy}`).get()
-    if (initiatorDoc.exists) {
-      initiatorName = initiatorDoc.data()?.displayName || initiatorName
+    if (tokens.length === 0) {
+      console.log('No FCM tokens found for target users')
+      return
     }
 
-    const sessionDate = after.date || 'Unknown date'
+    // Look up actor name for notification text
+    let actorName = actorEmail
+    if (actorEmail) {
+      const actorDoc = await db.doc(`units/${unitId}/members/${actorEmail}`).get()
+      if (actorDoc.exists) {
+        actorName = actorDoc.data()?.displayName || actorEmail
+      }
+    }
+
+    const sessionDate = (after.date || before.date || 'Unknown date') as string
 
     const message = {
       tokens,
       data: {
-        title: 'Deposit Verification Needed',
-        body: `${initiatorName} initiated a deposit for the ${sessionDate} session`,
+        title: config.title,
+        body: config.body(actorName, sessionDate),
         sessionId,
         url: `/session/${sessionId}`,
       },
     }
 
+    console.log(`Sending to ${tokens.length} tokens`)
     const response = await getMessaging().sendEachForMulticast(message)
+    console.log(`Success: ${response.successCount}, Failures: ${response.failureCount}`)
 
     // Clean up invalid tokens
     const failedTokens: string[] = []

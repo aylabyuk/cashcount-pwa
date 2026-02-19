@@ -33,19 +33,20 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
   const data = event.notification.data || {}
+  const sessionId = data.sessionId
   const url = data.url || '/'
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If the app is already open, focus it and navigate
+      // If the app is already open, focus it and post a message to navigate
       for (const client of clientList) {
         if (client.url.includes(self.location.origin)) {
           client.focus()
-          client.navigate(url)
+          client.postMessage({ type: 'NAVIGATE_TO_SESSION', sessionId })
           return
         }
       }
-      // Otherwise open a new window
+      // Otherwise open a new window with the deep link path
       return self.clients.openWindow(url)
     })
   )

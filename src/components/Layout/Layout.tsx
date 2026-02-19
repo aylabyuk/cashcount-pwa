@@ -14,6 +14,7 @@ import appIcon from '../../assets/icon.png'
 export default function Layout() {
   const dispatch = useAppDispatch()
   const view = useAppSelector((s) => s.view)
+  const unitName = useAppSelector((s) => s.auth.unit?.unitName ?? null)
   const isDesktop = useMediaQuery(DESKTOP_BREAKPOINT)
 
   useThemeSync()
@@ -30,19 +31,29 @@ export default function Layout() {
         <div className={`${isDesktop ? 'px-6' : 'max-w-2xl mx-auto px-4'} h-14 flex items-center justify-between`}>
           <div className="flex items-center gap-2">
             {showBack && (
-              <button
-                onClick={() => dispatch(navigateToList())}
-                className="p-1.5 -ml-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+              <>
+                <button
+                  onClick={() => dispatch(navigateToList())}
+                  className="p-1.5 -ml-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                {unitName && (
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{unitName}</span>
+                )}
+              </>
             )}
             {showTitle && (
               <div className="flex items-center gap-1.5">
-                <img src={appIcon} alt="" className="w-7 h-7" />
-                <h1 className="text-lg font-semibold">CashCount</h1>
+                <img src={appIcon} alt="" className="w-9 h-9 rounded-lg" />
+                <div>
+                  <h1 className="text-lg font-semibold leading-tight">CashCount</h1>
+                  {unitName && (
+                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">{unitName}</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

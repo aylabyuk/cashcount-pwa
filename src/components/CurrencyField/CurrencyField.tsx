@@ -37,7 +37,7 @@ export default function CurrencyField({ label, cents, onChange, disabled }: Prop
         onBlur={() => setText(centsToDecimalString(cents))}
         disabled={disabled}
         placeholder="0.00"
-        className="w-20 h-12 md:h-10 text-center text-lg md:text-base font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        className="w-28 h-12 md:h-10 text-center text-lg md:text-base font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
       />
       </div>
     </div>

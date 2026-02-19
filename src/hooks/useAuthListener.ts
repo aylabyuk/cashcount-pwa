@@ -38,7 +38,9 @@ export function useAuthListener() {
 
         if (userUnitDoc.exists()) {
           const data = userUnitDoc.data() as { unitId: string; unitName: string }
-          dispatch(setAuthUnit({ unitId: data.unitId, unitName: data.unitName }))
+          const memberDoc = await getDoc(doc(db, 'units', data.unitId, 'members', email))
+          const role = memberDoc.exists() ? (memberDoc.data().role as string) ?? 'member' : 'member'
+          dispatch(setAuthUnit({ unitId: data.unitId, unitName: data.unitName, role }))
         } else {
           dispatch(setAuthNoUnit())
         }

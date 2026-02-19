@@ -10,6 +10,7 @@ export interface AuthUser {
 export interface UnitInfo {
   unitId: string
   unitName: string
+  role: string
 }
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'no_unit' | 'ready'

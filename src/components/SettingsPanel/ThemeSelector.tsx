@@ -13,19 +13,20 @@ export default function ThemeSelector() {
 
   return (
     <div>
-      <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Theme</h3>
-      <div className="flex gap-1">
+      <h3 className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">Appearance</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
         {THEMES.map((t) => (
           <button
             key={t.value}
             onClick={() => dispatch(setTheme(t.value))}
-            className={`flex-1 text-xs py-1.5 rounded-md font-medium ${
-              theme === t.value
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-black/2 dark:hover:bg-white/2'
-            }`}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-black/2 dark:hover:bg-white/2"
           >
-            {t.label}
+            <span className="text-sm">{t.label}</span>
+            {theme === t.value && (
+              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
           </button>
         ))}
       </div>

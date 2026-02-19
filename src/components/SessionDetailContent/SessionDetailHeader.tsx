@@ -9,7 +9,8 @@ interface Props {
   status: string
   canReactivate: boolean
   onAdd: () => void
-  onMarkReportPrinted: () => void
+  onPrint: () => void
+  onMarkRecorded: () => void
   onMarkDeposited: () => void
   onMarkNoDonations: () => void
   onReactivate: () => void
@@ -24,7 +25,8 @@ export default function SessionDetailHeader({
   status,
   canReactivate,
   onAdd,
-  onMarkReportPrinted,
+  onPrint,
+  onMarkRecorded,
   onMarkDeposited,
   onMarkNoDonations,
   onReactivate,
@@ -43,7 +45,7 @@ export default function SessionDetailHeader({
     return () => document.removeEventListener('mousedown', handleClick)
   }, [showMenu])
 
-  const showMenuButton = status === 'active' || status === 'report_printed' || canReactivate
+  const showMenuButton = status !== 'no_donations'
 
   return (
     <div className="flex items-center justify-between">
@@ -76,13 +78,19 @@ export default function SessionDetailHeader({
             </button>
             {showMenu && (
               <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-30">
+                <button
+                  onClick={() => { setShowMenu(false); onPrint() }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
+                  Print Report
+                </button>
                 {status === 'active' && (
                   <>
                     <button
-                      onClick={() => { setShowMenu(false); onMarkReportPrinted() }}
+                      onClick={() => { setShowMenu(false); onMarkRecorded() }}
                       className="w-full text-left px-4 py-2.5 text-sm text-amber-700 dark:text-amber-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                     >
-                      Mark Report Printed
+                      Mark Session Recorded
                     </button>
                     <button
                       onClick={() => { setShowMenu(false); onMarkNoDonations() }}
@@ -92,7 +100,7 @@ export default function SessionDetailHeader({
                     </button>
                   </>
                 )}
-                {status === 'report_printed' && (
+                {status === 'recorded' && (
                   <button
                     onClick={() => { setShowMenu(false); onMarkDeposited() }}
                     className="w-full text-left px-4 py-2.5 text-sm text-green-700 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"

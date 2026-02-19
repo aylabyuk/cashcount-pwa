@@ -14,7 +14,7 @@ export interface Envelope {
   lastUpdatedBy?: string // email
 }
 
-export type SessionStatus = 'active' | 'report_printed' | 'deposited' | 'no_donations'
+export type SessionStatus = 'active' | 'recorded' | 'deposited' | 'no_donations'
 
 export interface CountingSession {
   id: string
@@ -23,9 +23,9 @@ export interface CountingSession {
   status: SessionStatus
   createdBy?: string           // email
   lastUpdatedBy?: string       // email
-  reportPrintedAt?: string   // ISO datetime
-  reportPrintedBy?: string   // email
-  batchNumber?: string       // required when marking report printed
+  recordedAt?: string        // ISO datetime
+  recordedBy?: string        // email
+  batchNumber?: string       // required when marking session recorded
   depositedAt?: string       // ISO datetime
   depositedBy?: [string, string] // two depositor names
   noDonationsAt?: string         // ISO datetime
@@ -133,11 +133,11 @@ const sessionsSlice = createSlice({
         (e) => e.id !== action.payload.envelopeId
       )
     },
-    markReportPrinted(state, action: PayloadAction<{ sessionId: string; batchNumber: string }>) {
+    markRecorded(state, action: PayloadAction<{ sessionId: string; batchNumber: string }>) {
       const session = state.sessions.find((s) => s.id === action.payload.sessionId)
       if (!session || session.status !== 'active') return
-      session.status = 'report_printed'
-      session.reportPrintedAt = new Date().toISOString()
+      session.status = 'recorded'
+      session.recordedAt = new Date().toISOString()
       session.batchNumber = action.payload.batchNumber
     },
     markDeposited(
@@ -145,7 +145,7 @@ const sessionsSlice = createSlice({
       action: PayloadAction<{ sessionId: string; name1: string; name2: string }>
     ) {
       const session = state.sessions.find((s) => s.id === action.payload.sessionId)
-      if (!session || session.status !== 'report_printed') return
+      if (!session || session.status !== 'recorded') return
       session.status = 'deposited'
       session.depositedAt = new Date().toISOString()
       session.depositedBy = [action.payload.name1, action.payload.name2]
@@ -183,7 +183,7 @@ export const {
   addEnvelope,
   updateEnvelope,
   deleteEnvelope,
-  markReportPrinted,
+  markRecorded,
   markDeposited,
   markNoDonations,
   reactivateSession,

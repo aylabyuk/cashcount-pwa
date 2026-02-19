@@ -4,8 +4,8 @@ import { SPRING_MODAL } from '../../utils/constants'
 import StatusFormFields from './StatusFormFields'
 import { useStatusConfirmForm } from './useStatusConfirmForm'
 
-interface ReportPrintedProps {
-  type: 'report_printed'
+interface RecordedProps {
+  type: 'recorded'
   open: boolean
   onConfirm: (batchNumber: string) => void
   onCancel: () => void
@@ -26,7 +26,7 @@ interface NoDonationsProps {
   onCancel: () => void
 }
 
-type Props = ReportPrintedProps | DepositedProps | NoDonationsProps
+type Props = RecordedProps | DepositedProps | NoDonationsProps
 
 export default function StatusConfirmModal(props: Props) {
   const { type, open, onCancel } = props
@@ -34,7 +34,7 @@ export default function StatusConfirmModal(props: Props) {
   const form = useStatusConfirmForm({
     type,
     envelopeCount: type === 'no_donations' ? props.envelopeCount : undefined,
-    onConfirmReportPrinted: type === 'report_printed' ? props.onConfirm : undefined,
+    onConfirmRecorded: type === 'recorded' ? props.onConfirm : undefined,
     onConfirmDeposited: type === 'deposited' ? props.onConfirm : undefined,
     onConfirmNoDonations: type === 'no_donations' ? props.onConfirm : undefined,
   })
@@ -50,8 +50,8 @@ export default function StatusConfirmModal(props: Props) {
   })
 
   const formFields =
-    type === 'report_printed' ? (
-      <StatusFormFields type="report_printed" batchNumber={form.batchNumber} onBatchNumberChange={form.setBatchNumber} />
+    type === 'recorded' ? (
+      <StatusFormFields type="recorded" batchNumber={form.batchNumber} onBatchNumberChange={form.setBatchNumber} />
     ) : type === 'deposited' ? (
       <StatusFormFields type="deposited" name1={form.name1} name2={form.name2} onName1Change={form.setName1} onName2Change={form.setName2} />
     ) : (

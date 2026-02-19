@@ -29,9 +29,9 @@ export default function SessionListItem({ session, isSelected, onSelect, members
         <div>
           <div className="flex items-center gap-1.5">
             <span className="font-semibold">{formatDate(session.date)}</span>
-            {status === 'report_printed' && (
+            {status === 'recorded' && (
               <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full">
-                Printed
+                Recorded
               </span>
             )}
             {status === 'deposited' && (

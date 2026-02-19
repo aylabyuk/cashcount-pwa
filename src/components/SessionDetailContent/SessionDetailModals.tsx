@@ -26,9 +26,9 @@ interface Props {
   editingEnvelope: Envelope | null
   onCloseEditModal: () => void
 
-  showReportPrintedModal: boolean
-  onCancelReportPrinted: () => void
-  onConfirmReportPrinted: (batchNumber: string) => void
+  showRecordedModal: boolean
+  onCancelRecorded: () => void
+  onConfirmRecorded: (batchNumber: string) => void
 
   showDepositedModal: boolean
   onCancelDeposited: () => void
@@ -54,9 +54,9 @@ export default function SessionDetailModals({
   editingEnvelopeId,
   editingEnvelope,
   onCloseEditModal,
-  showReportPrintedModal,
-  onCancelReportPrinted,
-  onConfirmReportPrinted,
+  showRecordedModal,
+  onCancelRecorded,
+  onConfirmRecorded,
   showDepositedModal,
   onCancelDeposited,
   onConfirmDeposited,
@@ -89,10 +89,10 @@ export default function SessionDetailModals({
       )}
 
       <StatusConfirmModal
-        type="report_printed"
-        open={showReportPrintedModal}
-        onConfirm={onConfirmReportPrinted}
-        onCancel={onCancelReportPrinted}
+        type="recorded"
+        open={showRecordedModal}
+        onConfirm={onConfirmRecorded}
+        onCancel={onCancelRecorded}
       />
       <StatusConfirmModal
         type="deposited"

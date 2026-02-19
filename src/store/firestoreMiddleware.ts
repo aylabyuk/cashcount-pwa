@@ -17,7 +17,7 @@ const SESSION_ACTIONS = new Set([
   'sessions/addEnvelope',
   'sessions/updateEnvelope',
   'sessions/deleteEnvelope',
-  'sessions/markReportPrinted',
+  'sessions/markRecorded',
   'sessions/markDeposited',
   'sessions/markNoDonations',
   'sessions/reactivateSession',
@@ -31,8 +31,8 @@ function sessionToFirestore(session: CountingSession, userEmail: string) {
     envelopes: session.envelopes,
     createdBy: session.createdBy ?? null,
     lastUpdatedBy: userEmail,
-    reportPrintedAt: session.reportPrintedAt ?? null,
-    reportPrintedBy: session.reportPrintedBy ?? null,
+    recordedAt: session.recordedAt ?? null,
+    recordedBy: session.recordedBy ?? null,
     batchNumber: session.batchNumber ?? null,
     depositedAt: session.depositedAt ?? null,
     depositedBy: session.depositedBy ?? null,
@@ -167,15 +167,15 @@ async function handleFirestoreWrite(
       break
     }
 
-    case 'sessions/markReportPrinted': {
+    case 'sessions/markRecorded': {
       const { sessionId, batchNumber } = p as { sessionId: string; batchNumber: string }
       const session = sessions.find((s) => s.id === sessionId)
       if (!session || session.status !== 'active') return
       const updatedSession: CountingSession = {
         ...session,
-        status: 'report_printed',
-        reportPrintedAt: new Date().toISOString(),
-        reportPrintedBy: userEmail,
+        status: 'recorded',
+        recordedAt: new Date().toISOString(),
+        recordedBy: userEmail,
         batchNumber,
       }
       await setDoc(
@@ -189,7 +189,7 @@ async function handleFirestoreWrite(
     case 'sessions/markDeposited': {
       const { sessionId, name1, name2 } = p as { sessionId: string; name1: string; name2: string }
       const session = sessions.find((s) => s.id === sessionId)
-      if (!session || session.status !== 'report_printed') return
+      if (!session || session.status !== 'recorded') return
       const updatedSession: CountingSession = {
         ...session,
         status: 'deposited',

@@ -24,8 +24,8 @@ export const PURGE_MONTHS = 6
 
 // Session status badges
 export const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  report_printed: {
-    label: 'Report Printed',
+  recorded: {
+    label: 'Recorded',
     className: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30',
   },
   deposited: {

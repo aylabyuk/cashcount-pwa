@@ -52,3 +52,31 @@ a {
 .count-pulse {
   animation: count-pulse 150ms ease-out;
 }
+
+.printable-report {
+  display: none;
+}
+
+/* Print styles */
+@media print {
+  body > *:not(.printable-report) {
+    display: none !important;
+  }
+
+  .printable-report {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    background: white;
+    color: black;
+    font-size: 14px;
+    font-family: "Inter Variable", system-ui, sans-serif;
+  }
+
+  @page {
+    margin: 15mm;
+  }
+}

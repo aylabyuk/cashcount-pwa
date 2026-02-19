@@ -1,6 +1,19 @@
 import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore'
 import { db } from '../firebase'
-import type { CountingSession } from '../store/sessionsSlice'
+
+interface LegacySession {
+  id: string
+  date: string
+  envelopes: unknown[]
+  status?: string
+  reportPrintedAt?: string
+  recordedAt?: string
+  batchNumber?: string
+  depositedAt?: string
+  depositedBy?: [string, string]
+  noDonationsAt?: string
+  noDonationsReason?: string
+}
 
 const STORAGE_KEY = 'cashcount_sessions'
 const MIGRATED_KEY = 'cashcount_migrated'
@@ -15,7 +28,7 @@ export async function migrateLocalSessionsToFirestore(unitId: string): Promise<n
   }
 
   try {
-    const parsed = JSON.parse(data) as { sessions: CountingSession[] }
+    const parsed = JSON.parse(data) as { sessions: LegacySession[] }
     const sessions = parsed.sessions ?? []
 
     if (sessions.length === 0) {
@@ -27,9 +40,9 @@ export async function migrateLocalSessionsToFirestore(unitId: string): Promise<n
       sessions.map((session) =>
         setDoc(doc(collection(db, 'units', unitId, 'sessions'), session.id), {
           date: session.date,
-          status: session.status ?? 'active',
+          status: session.status === 'report_printed' ? 'recorded' : (session.status ?? 'active'),
           envelopes: session.envelopes ?? [],
-          reportPrintedAt: session.reportPrintedAt ?? null,
+          recordedAt: session.recordedAt ?? session.reportPrintedAt ?? null,
           batchNumber: session.batchNumber ?? null,
           depositedAt: session.depositedAt ?? null,
           depositedBy: session.depositedBy ?? null,

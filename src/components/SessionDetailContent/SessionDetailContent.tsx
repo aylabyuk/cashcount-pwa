@@ -1,5 +1,7 @@
 import { formatDate } from '../../utils/date'
+import { useAppSelector } from '../../store'
 import TotalsSummary from '../TotalsSummary'
+import PrintableReport from '../PrintableReport'
 import SessionDetailHeader from './SessionDetailHeader'
 import NoDonationsView from './NoDonationsView'
 import EnvelopeCards from './EnvelopeCards'
@@ -20,6 +22,8 @@ export default function SessionDetailContent({
 }: Props) {
   const { session, status, editable, badge, canReactivate, sortedEnvelopes, displayIndex } = useSessionDetail(sessionId)
   const actions = useSessionActions(session, displayIndex)
+  const authUser = useAppSelector((s) => s.auth.user)
+  const unitName = useAppSelector((s) => s.auth.unit?.unitName)
 
   if (!session) {
     return (
@@ -44,7 +48,8 @@ export default function SessionDetailContent({
           status={status}
           canReactivate={canReactivate}
           onAdd={() => actions.setShowAddModal(true)}
-          onMarkReportPrinted={() => actions.setShowReportPrintedModal(true)}
+          onPrint={() => window.print()}
+          onMarkRecorded={() => actions.setShowRecordedModal(true)}
           onMarkDeposited={() => actions.setShowDepositedModal(true)}
           onMarkNoDonations={() => actions.setShowNoDonationsConfirm(true)}
           onReactivate={actions.handleReactivate}
@@ -60,13 +65,13 @@ export default function SessionDetailContent({
           </div>
         )}
 
-        {/* Report printed info */}
-        {(status === 'report_printed' || status === 'deposited') && session.reportPrintedAt && (
+        {/* Session recorded info */}
+        {(status === 'recorded' || status === 'deposited') && session.recordedAt && (
           <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 space-y-0.5">
-            <div className="font-medium">Report printed{session.batchNumber && <span> — Batch #{session.batchNumber}</span>}</div>
+            <div className="font-medium">Session recorded{session.batchNumber && <span> — Batch #{session.batchNumber}</span>}</div>
             <div>
-              {new Date(session.reportPrintedAt).toLocaleString()}
-              {session.reportPrintedBy && <span> by {session.reportPrintedBy}</span>}
+              {new Date(session.recordedAt).toLocaleString()}
+              {session.recordedBy && <span> by {session.recordedBy}</span>}
             </div>
           </div>
         )}
@@ -111,6 +116,14 @@ export default function SessionDetailContent({
         </div>
       )}
 
+      {status !== 'no_donations' && (
+        <PrintableReport
+          session={session}
+          unitName={unitName}
+          printedBy={authUser?.email}
+        />
+      )}
+
       <SessionDetailModals
         sessionId={session.id}
         editable={editable}
@@ -122,9 +135,9 @@ export default function SessionDetailContent({
         editingEnvelopeId={actions.editingEnvelopeId}
         editingEnvelope={actions.editingEnvelope}
         onCloseEditModal={() => actions.setEditingEnvelopeId(null)}
-        showReportPrintedModal={actions.showReportPrintedModal}
-        onCancelReportPrinted={() => actions.setShowReportPrintedModal(false)}
-        onConfirmReportPrinted={actions.handleMarkReportPrinted}
+        showRecordedModal={actions.showRecordedModal}
+        onCancelRecorded={() => actions.setShowRecordedModal(false)}
+        onConfirmRecorded={actions.handleMarkRecorded}
         showDepositedModal={actions.showDepositedModal}
         onCancelDeposited={() => actions.setShowDepositedModal(false)}
         onConfirmDeposited={actions.handleMarkDeposited}

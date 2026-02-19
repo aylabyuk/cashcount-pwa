@@ -3,7 +3,7 @@ import { useAppDispatch } from '../../store'
 import {
   addEnvelope,
   deleteEnvelope,
-  markReportPrinted,
+  markRecorded,
   markDeposited,
   markNoDonations,
   reactivateSession,
@@ -24,7 +24,7 @@ export function useSessionActions(
     number: number
     total: number
   } | null>(null)
-  const [showReportPrintedModal, setShowReportPrintedModal] = useState(false)
+  const [showRecordedModal, setShowRecordedModal] = useState(false)
   const [showDepositedModal, setShowDepositedModal] = useState(false)
   const [showNoDonationsConfirm, setShowNoDonationsConfirm] = useState(false)
 
@@ -70,11 +70,11 @@ export function useSessionActions(
     }
   }, [dispatch, session, envelopeToDelete])
 
-  const handleMarkReportPrinted = useCallback(
+  const handleMarkRecorded = useCallback(
     (batchNumber: string) => {
       if (!session) return
-      dispatch(markReportPrinted({ sessionId: session.id, batchNumber }))
-      setShowReportPrintedModal(false)
+      dispatch(markRecorded({ sessionId: session.id, batchNumber }))
+      setShowRecordedModal(false)
     },
     [dispatch, session]
   )
@@ -110,8 +110,8 @@ export function useSessionActions(
     editingEnvelope,
     envelopeToDelete,
     setEnvelopeToDelete,
-    showReportPrintedModal,
-    setShowReportPrintedModal,
+    showRecordedModal,
+    setShowRecordedModal,
     showDepositedModal,
     setShowDepositedModal,
     showNoDonationsConfirm,
@@ -120,7 +120,7 @@ export function useSessionActions(
     handleAddEnvelope,
     handleDeleteClick,
     handleConfirmDelete,
-    handleMarkReportPrinted,
+    handleMarkRecorded,
     handleMarkDeposited,
     handleMarkNoDonations,
     handleReactivate,

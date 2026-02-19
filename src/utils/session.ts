@@ -6,7 +6,7 @@ export function getSessionParticipants(session: CountingSession): string[] {
 
   if (session.createdBy) emails.add(session.createdBy)
   if (session.lastUpdatedBy) emails.add(session.lastUpdatedBy)
-  if (session.reportPrintedBy) emails.add(session.reportPrintedBy)
+  if (session.recordedBy) emails.add(session.recordedBy)
 
   for (const envelope of session.envelopes) {
     if (envelope.lastUpdatedBy) emails.add(envelope.lastUpdatedBy)

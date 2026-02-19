@@ -1,7 +1,7 @@
 const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
-interface ReportPrintedFieldsProps {
-  type: 'report_printed'
+interface RecordedFieldsProps {
+  type: 'recorded'
   batchNumber: string
   onBatchNumberChange: (value: string) => void
 }
@@ -20,10 +20,10 @@ interface NoDonationsFieldsProps {
   onReasonChange: (value: string) => void
 }
 
-type Props = ReportPrintedFieldsProps | DepositedFieldsProps | NoDonationsFieldsProps
+type Props = RecordedFieldsProps | DepositedFieldsProps | NoDonationsFieldsProps
 
 export default function StatusFormFields(props: Props) {
-  if (props.type === 'report_printed') {
+  if (props.type === 'recorded') {
     return (
       <div className="mb-6">
         <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">

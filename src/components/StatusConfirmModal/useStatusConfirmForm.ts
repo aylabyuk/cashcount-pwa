@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react'
 import { useAppSelector } from '../../store'
 
-type Type = 'report_printed' | 'deposited' | 'no_donations'
+type Type = 'recorded' | 'deposited' | 'no_donations'
 
 interface Options {
   type: Type
   envelopeCount?: number
-  onConfirmReportPrinted?: (batchNumber: string) => void
+  onConfirmRecorded?: (batchNumber: string) => void
   onConfirmDeposited?: (name1: string, name2: string) => void
   onConfirmNoDonations?: (reason: string) => void
 }
@@ -27,9 +27,9 @@ export function useStatusConfirmForm(options: Options) {
   }, [userName])
 
   const handleConfirm = useCallback(() => {
-    if (type === 'report_printed') {
+    if (type === 'recorded') {
       if (!batchNumber.trim()) return
-      options.onConfirmReportPrinted?.(batchNumber.trim())
+      options.onConfirmRecorded?.(batchNumber.trim())
     } else if (type === 'deposited') {
       if (!name1.trim() || !name2.trim()) return
       options.onConfirmDeposited?.(name1.trim(), name2.trim())
@@ -40,7 +40,7 @@ export function useStatusConfirmForm(options: Options) {
   }, [type, batchNumber, name1, name2, reason, options])
 
   const canConfirm =
-    type === 'report_printed'
+    type === 'recorded'
       ? !!batchNumber.trim()
       : type === 'deposited'
         ? !!(name1.trim() && name2.trim())
@@ -51,7 +51,7 @@ export function useStatusConfirmForm(options: Options) {
       ? 'Mark as Deposited?'
       : type === 'no_donations'
         ? 'Mark as No Donations?'
-        : 'Mark Report as Printed?'
+        : 'Mark Session as Recorded?'
 
   const envelopeCount = options.envelopeCount ?? 0
   const description =
@@ -61,7 +61,7 @@ export function useStatusConfirmForm(options: Options) {
         ? envelopeCount > 0
           ? `You have ${envelopeCount} envelope${envelopeCount > 1 ? 's' : ''} recorded for this Sunday. Marking it as "No Donations" will permanently delete all envelope data. Please provide a reason.`
           : 'This will mark the session as having no donations received. You can reactivate it later, but please provide a reason.'
-        : 'This will mark the report as printed and recorded in the church system. Envelopes can no longer be modified. This action cannot be undone.'
+        : 'This will mark the session as recorded in the church system. Envelopes can no longer be modified. This action cannot be undone.'
 
   const confirmLabel = type === 'no_donations' ? 'Yes, No Donations' : 'Confirm'
 

@@ -1,6 +1,9 @@
+import { useMemo } from 'react'
 import { formatDate, getCurrentSunday } from '../../utils/date'
+import { useAppSelector } from '../../store'
 import ConfirmDialog from '../ConfirmDialog'
 import AlertDialog from '../AlertDialog'
+import type { ParticipantInfo } from '../ParticipantAvatars'
 import SessionListItem from './SessionListItem'
 import { useSessionsList } from './useSessionsList'
 
@@ -18,6 +21,18 @@ export default function SessionsListContent({
   isPanel,
 }: Props) {
   const list = useSessionsList(selectedSessionId, onSessionDeleted)
+  const authUser = useAppSelector((s) => s.auth.user)
+
+  const members = useMemo(() => {
+    const map = new Map<string, ParticipantInfo>()
+    if (authUser?.email) {
+      map.set(authUser.email, {
+        displayName: authUser.displayName,
+        photoURL: authUser.photoURL,
+      })
+    }
+    return map
+  }, [authUser])
 
   return (
     <div className={isPanel ? 'flex flex-col flex-1 min-h-0' : ''}>
@@ -36,7 +51,7 @@ export default function SessionsListContent({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-2.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
             <p className="text-lg font-medium mb-1">No Sessions</p>
-            <p className="text-sm">Start a new counting session below.</p>
+            <p className="text-sm">Tap New Session to get started.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -46,6 +61,7 @@ export default function SessionsListContent({
                 session={session}
                 isSelected={session.id === selectedSessionId}
                 onSelect={onSelectSession}
+                members={members}
               />
             ))}
             {list.visibleCount < list.sessions.length && (

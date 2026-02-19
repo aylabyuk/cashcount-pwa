@@ -1,16 +1,20 @@
 import { type CountingSession, getSessionTotals } from '../../store/sessionsSlice'
 import { formatDate } from '../../utils/date'
 import { formatCurrency } from '../../utils/currency'
+import { getSessionParticipants } from '../../utils/session'
+import ParticipantAvatars, { type ParticipantInfo } from '../ParticipantAvatars'
 
 interface Props {
   session: CountingSession
   isSelected: boolean
   onSelect: (id: string) => void
+  members?: Map<string, ParticipantInfo>
 }
 
-export default function SessionListItem({ session, isSelected, onSelect }: Props) {
+export default function SessionListItem({ session, isSelected, onSelect, members }: Props) {
   const totals = getSessionTotals(session)
   const status = session.status
+  const participants = getSessionParticipants(session)
 
   return (
     <button
@@ -41,9 +45,14 @@ export default function SessionListItem({ session, isSelected, onSelect }: Props
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {session.envelopes.length} envelope(s)
-          </span>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {session.envelopes.length} envelope(s)
+            </span>
+            {participants.length > 0 && (
+              <ParticipantAvatars emails={participants} members={members} />
+            )}
+          </div>
         </div>
         <span className="text-lg font-semibold">
           {formatCurrency(totals.grandTotal)}

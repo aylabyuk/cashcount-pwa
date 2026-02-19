@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useAppSelector } from '../../store'
+import Avatar from '../Avatar'
 
 interface Member {
   email: string
@@ -21,7 +22,8 @@ interface Member {
 
 export default function MembersSection() {
   const unit = useAppSelector((s) => s.auth.unit)
-  const currentEmail = useAppSelector((s) => s.auth.user?.email ?? '')
+  const authUser = useAppSelector((s) => s.auth.user)
+  const currentEmail = authUser?.email ?? ''
   const [members, setMembers] = useState<Member[]>([])
   const [expandedEmail, setExpandedEmail] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -161,18 +163,26 @@ export default function MembersSection() {
                 member.status === 'disabled' ? 'opacity-50' : ''
               }`}
             >
-              <div className="text-left min-w-0">
-                <p className="text-sm truncate">
-                  {member.displayName || member.email}
-                  {isSelf(member.email) && (
-                    <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">(you)</span>
-                  )}
-                </p>
-                {member.displayName && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {member.email}
+              <div className="flex items-center gap-3 text-left min-w-0">
+                <Avatar
+                  email={member.email}
+                  displayName={member.displayName}
+                  photoURL={isSelf(member.email) ? authUser?.photoURL : null}
+                  size="md"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm truncate">
+                    {member.displayName || member.email}
+                    {isSelf(member.email) && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">(you)</span>
+                    )}
                   </p>
-                )}
+                  {member.displayName && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {member.email}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 shrink-0 ml-2">
                 {member.status === 'disabled' && (

@@ -1,18 +1,22 @@
 import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { type CountingSession, getSessionTotals } from '../../store/sessionsSlice'
+import type { Member } from '../../hooks/useMembers'
 import { formatCurrency } from '../../utils/currency'
 import { formatDate } from '../../utils/date'
+import { resolveDepositorNames } from '../../utils/deposit'
 import { BILL_DENOMINATIONS } from '../../utils/constants'
 
 interface Props {
   session: CountingSession
   unitName?: string
   printedBy?: string
+  membersMap?: Map<string, Member>
 }
 
-export default function PrintableReport({ session, unitName, printedBy }: Props) {
+export default function PrintableReport({ session, unitName, printedBy, membersMap }: Props) {
   const totals = getSessionTotals(session)
+  const depositorNames = resolveDepositorNames(session, membersMap ?? new Map())
 
   const chequeLines = useMemo(() => {
     const lines: { envelopeNum: number; amount: number }[] = []
@@ -102,9 +106,14 @@ export default function PrintableReport({ session, unitName, printedBy }: Props)
       </div>
 
       {/* Deposit info */}
-      {session.depositedBy && (
+      {depositorNames && (
         <div style={{ marginTop: 16, padding: '8px 0', borderTop: '1px solid #ccc', fontSize: 13 }}>
-          <div>Deposited by <strong>{session.depositedBy[0]}</strong> and <strong>{session.depositedBy[1]}</strong></div>
+          <div>Deposited by <strong>{depositorNames.depositor1Name}</strong> and <strong>{depositorNames.depositor2Name}</strong></div>
+          {depositorNames.verifiedByName ? (
+            <div style={{ color: '#666' }}>Verified by {depositorNames.verifiedByName}</div>
+          ) : (
+            <div style={{ color: '#c00', fontStyle: 'italic' }}>Not yet verified</div>
+          )}
           {session.depositedAt && (
             <div style={{ color: '#666' }}>{new Date(session.depositedAt).toLocaleString()}</div>
           )}

@@ -10,7 +10,6 @@ import { db } from '../firebase'
 import { useAppSelector, useAppDispatch } from '../store'
 import { setSessions } from '../store/sessionsSlice'
 import type { CountingSession } from '../store/sessionsSlice'
-import { migrateLocalSessionsToFirestore } from '../utils/migrateLocalSessions'
 
 export function useFirestoreSync() {
   const dispatch = useAppDispatch()
@@ -29,9 +28,6 @@ export function useFirestoreSync() {
       return
     }
 
-    // One-time migration of existing localStorage data
-    migrateLocalSessionsToFirestore(unitId)
-
     const sessionsRef = collection(db, 'units', unitId, 'sessions')
     const q = query(sessionsRef, orderBy('date', 'desc'))
 
@@ -44,14 +40,14 @@ export function useFirestoreSync() {
             id: doc.id,
             date: data.date,
             envelopes: data.envelopes ?? [],
-            status: data.status === 'report_printed' ? 'recorded' : (data.status ?? 'active'),
+            status: data.status ?? 'active',
             createdBy: data.createdBy ?? undefined,
             lastUpdatedBy: data.lastUpdatedBy ?? undefined,
-            recordedAt: data.recordedAt ?? data.reportPrintedAt ?? undefined,
-            recordedBy: data.recordedBy ?? data.reportPrintedBy ?? undefined,
+            recordedAt: data.recordedAt ?? undefined,
+            recordedBy: data.recordedBy ?? undefined,
             batchNumber: data.batchNumber ?? undefined,
             depositedAt: data.depositedAt ?? undefined,
-            depositedBy: data.depositedBy ?? undefined,
+            depositInfo: data.depositInfo ?? undefined,
             noDonationsAt: data.noDonationsAt ?? undefined,
             noDonationsReason: data.noDonationsReason ?? undefined,
           }

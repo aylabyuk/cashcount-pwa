@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
-  collection,
-  onSnapshot,
   doc,
   setDoc,
   updateDoc,
@@ -11,20 +9,12 @@ import {
 import { db } from '../../firebase'
 import { useAppSelector } from '../../store'
 import Avatar from '../Avatar'
-
-interface Member {
-  email: string
-  displayName: string
-  role: string
-  status: string
-  addedAt: unknown
-}
+import { useMembers, type Member } from '../../hooks/useMembers'
 
 export default function MembersSection() {
   const unit = useAppSelector((s) => s.auth.unit)
   const authUser = useAppSelector((s) => s.auth.user)
   const currentEmail = authUser?.email ?? ''
-  const [members, setMembers] = useState<Member[]>([])
   const [expandedEmail, setExpandedEmail] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newEmail, setNewEmail] = useState('')
@@ -32,29 +22,9 @@ export default function MembersSection() {
   const [loading, setLoading] = useState(false)
 
   const isAdmin = unit?.role === 'admin'
-  const unitId = unit?.unitId
+  const unitId = unit?.unitId ?? null
 
-  useEffect(() => {
-    if (!unitId || !isAdmin) return
-
-    const membersRef = collection(db, 'units', unitId, 'members')
-    const unsub = onSnapshot(membersRef, (snapshot) => {
-      const list: Member[] = snapshot.docs.map((d) => ({
-        email: d.id,
-        displayName: d.data().displayName ?? '',
-        role: d.data().role ?? 'member',
-        status: d.data().status ?? 'active',
-        addedAt: d.data().addedAt,
-      }))
-      list.sort((a, b) => {
-        if (a.status !== b.status) return a.status === 'active' ? -1 : 1
-        return a.email.localeCompare(b.email)
-      })
-      setMembers(list)
-    })
-
-    return unsub
-  }, [unitId, isAdmin])
+  const { members } = useMembers(isAdmin ? unitId : null)
 
   if (!isAdmin || !unitId || !unit) return null
 

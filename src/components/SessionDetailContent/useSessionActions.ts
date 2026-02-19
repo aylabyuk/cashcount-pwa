@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react'
-import { useAppDispatch } from '../../store'
+import { useAppDispatch, useAppSelector } from '../../store'
 import {
   addEnvelope,
   deleteEnvelope,
   markRecorded,
-  markDeposited,
+  initiateDeposit,
+  verifyDeposit,
+  rejectDeposit,
   markNoDonations,
   reactivateSession,
   getEnvelopeTotal,
@@ -16,6 +18,7 @@ export function useSessionActions(
   displayIndex: Map<string, number>,
 ) {
   const dispatch = useAppDispatch()
+  const userEmail = useAppSelector((s) => s.auth.user?.email ?? '')
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingEnvelopeId, setEditingEnvelopeId] = useState<string | null>(null)
@@ -27,6 +30,8 @@ export function useSessionActions(
   const [showRecordedModal, setShowRecordedModal] = useState(false)
   const [showDepositedModal, setShowDepositedModal] = useState(false)
   const [showNoDonationsConfirm, setShowNoDonationsConfirm] = useState(false)
+  const [showVerifyConfirm, setShowVerifyConfirm] = useState(false)
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false)
 
   const editingEnvelope = editingEnvelopeId
     ? session?.envelopes.find((e) => e.id === editingEnvelopeId) ?? null
@@ -79,14 +84,30 @@ export function useSessionActions(
     [dispatch, session]
   )
 
-  const handleMarkDeposited = useCallback(
-    (name1: string, name2: string) => {
+  const handleInitiateDeposit = useCallback(
+    (depositor1Email: string, depositor2Email: string) => {
       if (!session) return
-      dispatch(markDeposited({ sessionId: session.id, name1, name2 }))
+      dispatch(initiateDeposit({
+        sessionId: session.id,
+        depositor1: depositor1Email,
+        depositor2: depositor2Email,
+      }))
       setShowDepositedModal(false)
     },
     [dispatch, session]
   )
+
+  const handleVerifyDeposit = useCallback(() => {
+    if (!session) return
+    dispatch(verifyDeposit({ sessionId: session.id, verifiedBy: userEmail }))
+    setShowVerifyConfirm(false)
+  }, [dispatch, session, userEmail])
+
+  const handleRejectDeposit = useCallback(() => {
+    if (!session) return
+    dispatch(rejectDeposit({ sessionId: session.id }))
+    setShowRejectConfirm(false)
+  }, [dispatch, session])
 
   const handleMarkNoDonations = useCallback(
     (reason: string) => {
@@ -116,12 +137,18 @@ export function useSessionActions(
     setShowDepositedModal,
     showNoDonationsConfirm,
     setShowNoDonationsConfirm,
+    showVerifyConfirm,
+    setShowVerifyConfirm,
+    showRejectConfirm,
+    setShowRejectConfirm,
 
     handleAddEnvelope,
     handleDeleteClick,
     handleConfirmDelete,
     handleMarkRecorded,
-    handleMarkDeposited,
+    handleInitiateDeposit,
+    handleVerifyDeposit,
+    handleRejectDeposit,
     handleMarkNoDonations,
     handleReactivate,
   }

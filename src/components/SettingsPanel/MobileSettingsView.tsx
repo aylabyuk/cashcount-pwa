@@ -3,6 +3,7 @@ import ThemeSelector from './ThemeSelector'
 import InstallAppSection from './InstallAppSection'
 import AboutSection from './AboutSection'
 import MembersSection from './MembersSection'
+import NotificationsSection from './NotificationsSection'
 
 export default function MobileSettingsView() {
   return (
@@ -10,6 +11,7 @@ export default function MobileSettingsView() {
       <h2 className="text-lg font-semibold">Settings</h2>
       <UserSection />
       <MembersSection />
+      <NotificationsSection />
       <ThemeSelector />
       <InstallAppSection />
       <AboutSection />

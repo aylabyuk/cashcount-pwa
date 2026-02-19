@@ -34,6 +34,11 @@ export default function SessionListItem({ session, isSelected, onSelect, members
                 Recorded
               </span>
             )}
+            {status === 'pending_deposit' && (
+              <span className="text-[10px] font-medium text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5 rounded-full">
+                Pending Deposit
+              </span>
+            )}
             {status === 'deposited' && (
               <span className="text-[10px] font-medium text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
                 Deposited

@@ -14,7 +14,15 @@ export interface Envelope {
   lastUpdatedBy?: string // email
 }
 
-export type SessionStatus = 'active' | 'recorded' | 'deposited' | 'no_donations'
+export type SessionStatus = 'active' | 'recorded' | 'pending_deposit' | 'deposited' | 'no_donations'
+
+export interface DepositInfo {
+  depositor1: string       // email of P1
+  depositor2: string       // email of P2
+  initiatedBy: string      // email of who initiated
+  initiatedAt: string      // ISO datetime
+  verifiedBy?: string      // email of who verified (set on approval)
+}
 
 export interface CountingSession {
   id: string
@@ -27,7 +35,7 @@ export interface CountingSession {
   recordedBy?: string        // email
   batchNumber?: string       // required when marking session recorded
   depositedAt?: string       // ISO datetime
-  depositedBy?: [string, string] // two depositor names
+  depositInfo?: DepositInfo
   noDonationsAt?: string         // ISO datetime
   noDonationsReason?: string     // required reason/note
 }
@@ -140,15 +148,41 @@ const sessionsSlice = createSlice({
       session.recordedAt = new Date().toISOString()
       session.batchNumber = action.payload.batchNumber
     },
-    markDeposited(
+    initiateDeposit(
       state,
-      action: PayloadAction<{ sessionId: string; name1: string; name2: string }>
+      action: PayloadAction<{ sessionId: string; depositor1: string; depositor2: string }>
     ) {
       const session = state.sessions.find((s) => s.id === action.payload.sessionId)
       if (!session || session.status !== 'recorded') return
+      session.status = 'pending_deposit'
+      session.depositInfo = {
+        depositor1: action.payload.depositor1,
+        depositor2: action.payload.depositor2,
+        initiatedBy: action.payload.depositor1,
+        initiatedAt: new Date().toISOString(),
+      }
+    },
+    verifyDeposit(
+      state,
+      action: PayloadAction<{ sessionId: string; verifiedBy: string }>
+    ) {
+      const session = state.sessions.find((s) => s.id === action.payload.sessionId)
+      if (!session || session.status !== 'pending_deposit') return
       session.status = 'deposited'
       session.depositedAt = new Date().toISOString()
-      session.depositedBy = [action.payload.name1, action.payload.name2]
+      if (session.depositInfo) {
+        session.depositInfo.verifiedBy = action.payload.verifiedBy
+      }
+    },
+    rejectDeposit(
+      state,
+      action: PayloadAction<{ sessionId: string }>
+    ) {
+      const session = state.sessions.find((s) => s.id === action.payload.sessionId)
+      if (!session || session.status !== 'pending_deposit') return
+      session.status = 'recorded'
+      session.depositInfo = undefined
+      session.depositedAt = undefined
     },
     markNoDonations(state, action: PayloadAction<{ sessionId: string; reason: string }>) {
       const session = state.sessions.find((s) => s.id === action.payload.sessionId)
@@ -184,7 +218,9 @@ export const {
   updateEnvelope,
   deleteEnvelope,
   markRecorded,
-  markDeposited,
+  initiateDeposit,
+  verifyDeposit,
+  rejectDeposit,
   markNoDonations,
   reactivateSession,
   purgeOldSessions,

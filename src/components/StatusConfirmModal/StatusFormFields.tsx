@@ -1,3 +1,6 @@
+import type { Member } from '../../hooks/useMembers'
+import MemberPicker from '../MemberPicker'
+
 const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
 
 interface RecordedFieldsProps {
@@ -8,10 +11,11 @@ interface RecordedFieldsProps {
 
 interface DepositedFieldsProps {
   type: 'deposited'
-  name1: string
-  name2: string
-  onName1Change: (value: string) => void
-  onName2Change: (value: string) => void
+  members: Member[]
+  depositor1Email: string
+  depositor2Email: string
+  onDepositor1Change: (email: string) => void
+  onDepositor2Change: (email: string) => void
 }
 
 interface NoDonationsFieldsProps {
@@ -44,31 +48,20 @@ export default function StatusFormFields(props: Props) {
   if (props.type === 'deposited') {
     return (
       <div className="space-y-3 mb-6">
-        <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            Depositor 1
-          </label>
-          <input
-            type="text"
-            value={props.name1}
-            onChange={(e) => props.onName1Change(e.target.value)}
-            placeholder="Full name"
-            className={inputClass}
-            autoFocus
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-            Depositor 2
-          </label>
-          <input
-            type="text"
-            value={props.name2}
-            onChange={(e) => props.onName2Change(e.target.value)}
-            placeholder="Full name"
-            className={inputClass}
-          />
-        </div>
+        <MemberPicker
+          label="Depositor 1"
+          members={props.members}
+          selectedEmail={props.depositor1Email}
+          disabledEmail={props.depositor2Email}
+          onChange={props.onDepositor1Change}
+        />
+        <MemberPicker
+          label="Depositor 2"
+          members={props.members}
+          selectedEmail={props.depositor2Email}
+          disabledEmail={props.depositor1Email}
+          onChange={props.onDepositor2Change}
+        />
       </div>
     )
   }

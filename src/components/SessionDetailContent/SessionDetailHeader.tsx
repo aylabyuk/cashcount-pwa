@@ -11,7 +11,7 @@ interface Props {
   onAdd: () => void
   onPrint: () => void
   onMarkRecorded: () => void
-  onMarkDeposited: () => void
+  onInitiateDeposit: () => void
   onMarkNoDonations: () => void
   onReactivate: () => void
 }
@@ -27,7 +27,7 @@ export default function SessionDetailHeader({
   onAdd,
   onPrint,
   onMarkRecorded,
-  onMarkDeposited,
+  onInitiateDeposit,
   onMarkNoDonations,
   onReactivate,
 }: Props) {
@@ -102,10 +102,10 @@ export default function SessionDetailHeader({
                 )}
                 {status === 'recorded' && (
                   <button
-                    onClick={() => { setShowMenu(false); onMarkDeposited() }}
+                    onClick={() => { setShowMenu(false); onInitiateDeposit() }}
                     className="w-full text-left px-4 py-2.5 text-sm text-green-700 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   >
-                    Mark as Deposited
+                    Initiate Deposit
                   </button>
                 )}
                 {canReactivate && (

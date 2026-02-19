@@ -1,6 +1,7 @@
 import { useTransition, animated } from '@react-spring/web'
 import { useModalKeys } from '../../hooks/useModalKeys'
 import { SPRING_MODAL } from '../../utils/constants'
+import type { Member } from '../../hooks/useMembers'
 import StatusFormFields from './StatusFormFields'
 import { useStatusConfirmForm } from './useStatusConfirmForm'
 
@@ -14,7 +15,8 @@ interface RecordedProps {
 interface DepositedProps {
   type: 'deposited'
   open: boolean
-  onConfirm: (name1: string, name2: string) => void
+  members: Member[]
+  onConfirm: (depositor1Email: string, depositor2Email: string) => void
   onCancel: () => void
 }
 
@@ -53,7 +55,14 @@ export default function StatusConfirmModal(props: Props) {
     type === 'recorded' ? (
       <StatusFormFields type="recorded" batchNumber={form.batchNumber} onBatchNumberChange={form.setBatchNumber} />
     ) : type === 'deposited' ? (
-      <StatusFormFields type="deposited" name1={form.name1} name2={form.name2} onName1Change={form.setName1} onName2Change={form.setName2} />
+      <StatusFormFields
+        type="deposited"
+        members={props.members}
+        depositor1Email={form.depositor1Email}
+        depositor2Email={form.depositor2Email}
+        onDepositor1Change={form.setDepositor1Email}
+        onDepositor2Change={form.setDepositor2Email}
+      />
     ) : (
       <StatusFormFields type="no_donations" reason={form.reason} onReasonChange={form.setReason} />
     )

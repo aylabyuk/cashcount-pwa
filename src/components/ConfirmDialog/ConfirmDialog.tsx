@@ -7,11 +7,12 @@ interface Props {
   title: string
   message: string
   confirmLabel?: string
+  confirmVariant?: 'danger' | 'success'
   onConfirm: () => void
   onCancel: () => void
 }
 
-export default function ConfirmDialog({ open, title, message, confirmLabel = 'Delete', onConfirm, onCancel }: Props) {
+export default function ConfirmDialog({ open, title, message, confirmLabel = 'Delete', confirmVariant = 'danger', onConfirm, onCancel }: Props) {
   useModalKeys(open, { onClose: onCancel, onConfirm })
 
   const transitions = useTransition(open, MODAL_TRANSITION)
@@ -42,7 +43,11 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'De
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700"
+              className={`px-4 py-2 text-sm font-medium rounded-lg text-white ${
+                confirmVariant === 'success'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-red-600 hover:bg-red-700'
+              }`}
             >
               {confirmLabel}
             </button>

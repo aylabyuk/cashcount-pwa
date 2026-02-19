@@ -18,7 +18,9 @@ const SESSION_ACTIONS = new Set([
   'sessions/updateEnvelope',
   'sessions/deleteEnvelope',
   'sessions/markRecorded',
-  'sessions/markDeposited',
+  'sessions/initiateDeposit',
+  'sessions/verifyDeposit',
+  'sessions/rejectDeposit',
   'sessions/markNoDonations',
   'sessions/reactivateSession',
   'sessions/purgeOldSessions',
@@ -35,7 +37,7 @@ function sessionToFirestore(session: CountingSession, userEmail: string) {
     recordedBy: session.recordedBy ?? null,
     batchNumber: session.batchNumber ?? null,
     depositedAt: session.depositedAt ?? null,
-    depositedBy: session.depositedBy ?? null,
+    depositInfo: session.depositInfo ?? null,
     noDonationsAt: session.noDonationsAt ?? null,
     noDonationsReason: session.noDonationsReason ?? null,
     updatedAt: serverTimestamp(),
@@ -186,15 +188,60 @@ async function handleFirestoreWrite(
       break
     }
 
-    case 'sessions/markDeposited': {
-      const { sessionId, name1, name2 } = p as { sessionId: string; name1: string; name2: string }
+    case 'sessions/initiateDeposit': {
+      const { sessionId, depositor1, depositor2 } = p as {
+        sessionId: string; depositor1: string; depositor2: string
+      }
       const session = sessions.find((s) => s.id === sessionId)
       if (!session || session.status !== 'recorded') return
       const updatedSession: CountingSession = {
         ...session,
+        status: 'pending_deposit',
+        depositInfo: {
+          depositor1,
+          depositor2,
+          initiatedBy: userEmail,
+          initiatedAt: new Date().toISOString(),
+        },
+      }
+      await setDoc(
+        doc(db, 'units', unitId, 'sessions', sessionId),
+        sessionToFirestore(updatedSession, userEmail),
+        { merge: true }
+      )
+      break
+    }
+
+    case 'sessions/verifyDeposit': {
+      const { sessionId, verifiedBy } = p as { sessionId: string; verifiedBy: string }
+      const session = sessions.find((s) => s.id === sessionId)
+      if (!session || session.status !== 'pending_deposit') return
+      const updatedSession: CountingSession = {
+        ...session,
         status: 'deposited',
         depositedAt: new Date().toISOString(),
-        depositedBy: [name1, name2],
+        depositInfo: session.depositInfo ? {
+          ...session.depositInfo,
+          verifiedBy,
+        } : undefined,
+      }
+      await setDoc(
+        doc(db, 'units', unitId, 'sessions', sessionId),
+        sessionToFirestore(updatedSession, userEmail),
+        { merge: true }
+      )
+      break
+    }
+
+    case 'sessions/rejectDeposit': {
+      const { sessionId } = p as { sessionId: string }
+      const session = sessions.find((s) => s.id === sessionId)
+      if (!session || session.status !== 'pending_deposit') return
+      const updatedSession: CountingSession = {
+        ...session,
+        status: 'recorded',
+        depositInfo: undefined,
+        depositedAt: undefined,
       }
       await setDoc(
         doc(db, 'units', unitId, 'sessions', sessionId),

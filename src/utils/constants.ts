@@ -28,6 +28,10 @@ export const STATUS_BADGE: Record<string, { label: string; className: string }> 
     label: 'Recorded',
     className: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30',
   },
+  pending_deposit: {
+    label: 'Pending Deposit',
+    className: 'text-yellow-700 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30',
+  },
   deposited: {
     label: 'Deposited',
     className: 'text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30',

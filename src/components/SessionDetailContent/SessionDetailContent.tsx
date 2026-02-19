@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
 import { formatDate } from '../../utils/date'
 import { useAppSelector } from '../../store'
+import { useMembers } from '../../hooks/useMembers'
+import { resolveDepositorNames } from '../../utils/deposit'
 import TotalsSummary from '../TotalsSummary'
 import PrintableReport from '../PrintableReport'
 import SessionDetailHeader from './SessionDetailHeader'
@@ -20,10 +23,16 @@ export default function SessionDetailContent({
   onNotFound,
   isPanel,
 }: Props) {
-  const { session, status, editable, badge, canReactivate, sortedEnvelopes, displayIndex } = useSessionDetail(sessionId)
+  const { session, status, editable, badge, canReactivate, canVerify, sortedEnvelopes, displayIndex } = useSessionDetail(sessionId)
   const actions = useSessionActions(session, displayIndex)
   const authUser = useAppSelector((s) => s.auth.user)
   const unitName = useAppSelector((s) => s.auth.unit?.unitName)
+  const unitId = useAppSelector((s) => s.auth.unit?.unitId ?? null)
+  const { activeMembers } = useMembers(unitId)
+  const membersMap = useMemo(
+    () => new Map(activeMembers.map((m) => [m.email, m])),
+    [activeMembers]
+  )
 
   if (!session) {
     return (
@@ -35,6 +44,8 @@ export default function SessionDetailContent({
       </div>
     )
   }
+
+  const depositorNames = resolveDepositorNames(session, membersMap)
 
   return (
     <div className={isPanel ? 'h-full overflow-y-auto no-scrollbar' : ''}>
@@ -50,15 +61,54 @@ export default function SessionDetailContent({
           onAdd={() => actions.setShowAddModal(true)}
           onPrint={() => window.print()}
           onMarkRecorded={() => actions.setShowRecordedModal(true)}
-          onMarkDeposited={() => actions.setShowDepositedModal(true)}
+          onInitiateDeposit={() => actions.setShowDepositedModal(true)}
           onMarkNoDonations={() => actions.setShowNoDonationsConfirm(true)}
           onReactivate={actions.handleReactivate}
         />
 
-        {/* Deposit info */}
-        {status === 'deposited' && session.depositedBy && (
+        {/* Pending deposit info */}
+        {status === 'pending_deposit' && session.depositInfo && depositorNames && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg px-3 py-3 space-y-2">
+            <div className="space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+              <div className="font-medium text-yellow-800 dark:text-yellow-300">Awaiting deposit verification</div>
+              <div>Depositor 1: <span className="font-medium">{depositorNames.depositor1Name}</span></div>
+              <div>Depositor 2: <span className="font-medium">{depositorNames.depositor2Name}</span></div>
+              {session.depositInfo.initiatedAt && (
+                <div>Initiated {new Date(session.depositInfo.initiatedAt).toLocaleString()}</div>
+              )}
+            </div>
+            {canVerify && (
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => actions.setShowRejectConfirm(true)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded-full hover:bg-red-200 dark:hover:bg-red-900/60"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Reject
+                </button>
+                <button
+                  onClick={() => actions.setShowVerifyConfirm(true)}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 px-2 py-1 rounded-full hover:bg-green-200 dark:hover:bg-green-900/60"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Verify
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Completed deposit info */}
+        {status === 'deposited' && depositorNames && (
           <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 space-y-0.5">
-            <div>Deposited by <span className="font-medium">{session.depositedBy[0]}</span> and <span className="font-medium">{session.depositedBy[1]}</span></div>
+            <div>Deposited by <span className="font-medium">{depositorNames.depositor1Name}</span> and <span className="font-medium">{depositorNames.depositor2Name}</span></div>
+            {depositorNames.verifiedByName && (
+              <div>Verified by <span className="font-medium">{depositorNames.verifiedByName}</span></div>
+            )}
             {session.depositedAt && (
               <div>{new Date(session.depositedAt).toLocaleString()}</div>
             )}
@@ -66,7 +116,7 @@ export default function SessionDetailContent({
         )}
 
         {/* Session recorded info */}
-        {(status === 'recorded' || status === 'deposited') && session.recordedAt && (
+        {(status === 'recorded' || status === 'pending_deposit' || status === 'deposited') && session.recordedAt && (
           <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg px-3 py-2 space-y-0.5">
             <div className="font-medium">Session recorded{session.batchNumber && <span> — Batch #{session.batchNumber}</span>}</div>
             <div>
@@ -121,6 +171,7 @@ export default function SessionDetailContent({
           session={session}
           unitName={unitName}
           printedBy={authUser?.email}
+          membersMap={membersMap}
         />
       )}
 
@@ -129,6 +180,7 @@ export default function SessionDetailContent({
         editable={editable}
         envelopeCount={session.envelopes.length}
         displayIndex={displayIndex}
+        members={activeMembers}
         showAddModal={actions.showAddModal}
         onCloseAddModal={() => actions.setShowAddModal(false)}
         onAdd={actions.handleAddEnvelope}
@@ -140,10 +192,16 @@ export default function SessionDetailContent({
         onConfirmRecorded={actions.handleMarkRecorded}
         showDepositedModal={actions.showDepositedModal}
         onCancelDeposited={() => actions.setShowDepositedModal(false)}
-        onConfirmDeposited={actions.handleMarkDeposited}
+        onConfirmDeposited={actions.handleInitiateDeposit}
         showNoDonationsConfirm={actions.showNoDonationsConfirm}
         onCancelNoDonations={() => actions.setShowNoDonationsConfirm(false)}
         onConfirmNoDonations={actions.handleMarkNoDonations}
+        showVerifyConfirm={actions.showVerifyConfirm}
+        onCancelVerify={() => actions.setShowVerifyConfirm(false)}
+        onConfirmVerify={actions.handleVerifyDeposit}
+        showRejectConfirm={actions.showRejectConfirm}
+        onCancelReject={() => actions.setShowRejectConfirm(false)}
+        onConfirmReject={actions.handleRejectDeposit}
         envelopeToDelete={actions.envelopeToDelete}
         onCancelDelete={() => actions.setEnvelopeToDelete(null)}
         onConfirmDelete={actions.handleConfirmDelete}

@@ -7,6 +7,7 @@ import ThemeSelector from './ThemeSelector'
 import InstallAppSection from './InstallAppSection'
 import AboutSection from './AboutSection'
 import MembersSection from './MembersSection'
+import NotificationsSection from './NotificationsSection'
 
 export default function SettingsPanel() {
   const [collapsed, setCollapsed] = useState(false)
@@ -54,6 +55,7 @@ export default function SettingsPanel() {
         <div ref={contentRef} className="px-4 pb-4 space-y-4">
           <UserSection />
           <MembersSection />
+          <NotificationsSection />
           <ThemeSelector />
           <InstallAppSection />
           <AboutSection />

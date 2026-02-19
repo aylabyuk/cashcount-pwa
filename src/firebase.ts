@@ -5,6 +5,7 @@ import {
   persistentLocalCache,
   persistentMultipleTabManager,
 } from 'firebase/firestore'
+import { getMessaging, isSupported } from 'firebase/messaging'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,6 +15,8 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
+
+export const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined
 
 export const app = initializeApp(firebaseConfig)
 
@@ -26,3 +29,8 @@ export const db = initializeFirestore(app, {
 })
 
 export const googleProvider = new GoogleAuthProvider()
+
+// FCM messaging — lazy initialized, only when browser supports it
+export const messagingPromise = isSupported().then((supported) =>
+  supported ? getMessaging(app) : null
+)
